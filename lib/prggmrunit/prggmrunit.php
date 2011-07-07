@@ -24,7 +24,8 @@ namespace prggmrunit;
 /**
  * prggmrunit is a unit testing suite for php
  */
-require '../prggmr/lib/prggmr.php';
+$dir = dirname(realpath(__FILE__));
+require $dir.'/../prggmr/lib/prggmr.php';
 
 if (version_compare(\Prggmr::version(), 'v0.2.0', '<=')) {
     exit('prggmrunit requires prggmr v0.2.0');
@@ -40,41 +41,67 @@ class Events {
 }
 
 class Test extends \prggmr\Event {
-    
+
     // failed tests
     protected $_failures = array();
-    
+
     // passed tests
     protected $_pass = array();
-    
+
     // tests that have ran
     protected $_run = array();
-    
+
     // number of assertions run
     protected $_count = 0;
-    
+
     // tests avaliable
-    protected $_tests = array(); 
-    
+    protected $_tests = array();
+
+    // provides a line break after x amount of tests result prints
+    protected $_break = array(
+        'count' => 0,
+        'pass'  => 0,
+        'fail'  => 0
+    );
+
+    // number of passed assertsion
+    protected $_assertionPass = 0;
+
+    // number of failed assertion
+    protected $_assertionFail = 0;
+
     public function test($test, $msg)
     {
+        $this->_count++;
+        $this->_break['count'] += 1;
         $current = $this->getSubscription()->getIdentifier();
         if (false === $test) {
             if (!isset($this->_failures[$current])) {
                 $this->_failures[$current] = array();
             }
+            $this->_assertionFail++;
+            $this->_break['fail']++;
             $this->_failures[$current][] = $msg;
             echo "F";
         } else {
-            $this->_count++;
             if (!isset($this->_pass[$current])) {
                 $this->_pass[$current] = array();
             }
+            $this->_assertionPass++;
+            $this->_break['pass']++;
             $this->_pass[$current][] = true;
             echo ".";
         }
+        if ($this->_break['count'] >= 60) {
+            echo sprintf(" [%s/%s]\n", $this->_break['pass'], ($this->_break['pass'] + $this->_break['fail']));
+            $this->_break = array(
+                'count' => 0,
+                'pass'  => 0,
+                'fail'  => 0
+            );
+        }
     }
-    
+
     public function __call($name, $args)
     {
         if (isset($this->_tests[$name])) {
@@ -82,33 +109,33 @@ class Test extends \prggmr\Event {
             call_user_func_array($this->_tests[$name], $args);
         }
     }
-    
+
     // adds a new avaliable test
     public function addTest($closure, $name)
     {
         $this->_tests[$name] = $closure;
     }
-    
+
     public function testCount()
     {
         return count($this->_run);
     }
-    
+
     public function assertionCount()
     {
         return $this->_count;
     }
-    
+
     public function failures()
     {
         return $this->_failures;
     }
-    
+
     public function passed()
     {
         return $this->_pass;
     }
-    
+
     public function addRun($name)
     {
         $this->_run[] = $name;
@@ -119,23 +146,144 @@ class Test extends \prggmr\Event {
 $event = new Test();
 $engine = new \prggmr\Engine();
 // default tests
-$event->addTest(function($event, $expect, $actual){
-    $event->test(($expect === $actual), sprintf(
+
+/**
+ * equals test
+ */
+$event->addTest(function($test, $expect, $actual){
+    $test->test(($expect === $actual), sprintf(
         "Failed asserting %s equals %s",
-        print_r($expect, true),
-        print_r($actual, true)
+        print_r($actual, true),
+        print_r($expect, true)
     ));
 }, 'equal');
 
+/**
+ * event test
+ */
+$event->addTest(function($test, $signal, $expected, $params = null, $event = null, $engine = null){
+    if (null !== $engine) {
+        $fire = $engine->fire($signal, $params, $event);
+    } else {
+        $fire = \Prggmr::instance()->fire($signal, $params, $event);
+    }
+    $test->test(($fire->getData() === $expected), sprintf(
+        "Failed asserting event data %s equals %s",
+        print_r($fire->getData(), true),
+        print_r($expected, true)
+    ));
+}, 'event');
+
+/**
+ * exception test
+ */
+$event->addTest(function($test, $exception, $code){
+    try {
+        $code();
+    } catch (\Exception $e) {
+        $test->test((get_class($e) === $exception), sprintf(
+            'Exception %s was thrown expected %s',
+            get_class($e),
+            $exception
+        ));
+        return true;
+    }
+    $test->test(false, 'Exception not thrown');
+}, 'exception');
+
+/**
+ * true
+ */
+$event->addTest(function($test, $var){
+    $test->test(($var === true), sprintf(
+        'Failed asserting %s equals true',
+        print_r($var, true)
+    ));
+}, 'true');
+
+/**
+ * false
+ */
+$event->addTest(function($test, $var){
+    $test->test(($var === false), sprintf(
+        'Failed asserting %s equals false',
+        print_r($var, true)
+    ));
+}, 'false');
+
+/**
+ * null
+ */
+$event->addTest(function($test, $var){
+    $test->test(($var === null), sprintf(
+        'Failed asserting %s equals null',
+        print_r($var, true)
+    ));
+}, 'null');
+
+/**
+ * array
+ */
+$event->addTest(function($test, $array){
+    $test->test((is_array($array)), sprintf(
+        'Failed asserting %s is an array',
+        gettype($array)
+    ));
+}, 'array');
+
+/**
+ * string
+ */
+$event->addTest(function($test, $string){
+    $test->test((is_string($string)), sprintf(
+        'Failed asserting %s is a string',
+        gettype($array)
+    ));
+}, 'string');
+
+/**
+ * integer
+ */
+$event->addTest(function($test, $int){
+    $test->test((is_int($int)), sprintf(
+        'Failed asserting %s is an integer',
+        gettype($array)
+    ));
+}, 'integer');
+
+/**
+ * float
+ */
+$event->addTest(function($test, $float){
+    $test->test((is_float($float)), sprintf(
+        'Failed asserting %s is a float',
+        gettype($array)
+    ));
+}, 'float');
+
+/**
+ * object
+ */
+$event->addTest(function($test, $object){
+    $test->test((is_object($object)), sprintf(
+        'Failed asserting %s is an object',
+        gettype($array)
+    ));
+}, 'object');
+
+/**
+ * instanceof
+ */
+$event->addTest(function($test, $class, $object){
+    $test->test((get_class($class) === $object), sprintf(
+        'Failed asserting %s is an instance of %s',
+        get_class($class),
+        $object
+    ));
+}, 'instanceof');
+
 $GLOBALS['_PRGGMRUNIT_EVENT'] = $event;
 $GLOBALS['_PRGGMRUNIT_ENGINE'] = $engine;
-
-// creates a new test
-function test($name, $test) {
-    $GLOBALS['_PRGGMRUNIT_EVENT']->_current = $name;
-    $GLOBALS['_PRGGMRUNIT_EVENT']->addRun($name);
-    $GLOBALS['_PRGGMRUNIT_ENGINE']->subscribe(Events::TEST, $test, $name);
-}
 
 $engine->subscribe(Events::START, function($event){
     $event->setData(\Prggmr::instance()->getMilliseconds(), 'start_time');
@@ -143,7 +291,7 @@ $engine->subscribe(Events::START, function($event){
 });
 
 $engine->subscribe(Events::END, function($test){
-    
+
     $runtime = \Prggmr::instance()->getMilliseconds() - $test->getData('start_time');
     $testCount = $test->testCount();
     $pass = $test->passed();
@@ -151,7 +299,7 @@ $engine->subscribe(Events::END, function($test){
     $passAssertions = 0;
     foreach ($pass as $_pass) {
         $passTests++;
-        $passAssertions += count($pass);
+        $passAssertions += count($_pass);
     }
     $fail = $test->failures();
     $failTests = 0;
@@ -162,45 +310,37 @@ $engine->subscribe(Events::END, function($test){
     }
     $assertions = $test->assertionCount();
     if (0 != count($fail)) {
-        echo "\n----------------------------------";
+        echo "\n\n----------------------------------";
         echo "\nFailures Detected\n";
         foreach ($fail as $_k => $_fail) {
-            echo sprintf("Test %s had %s failures\n", $_k, count($_fail));
-            echo implode("\n", $_fail);
+            echo "\n----------------------------------";
+            echo sprintf("\nTest ( %s ) had ( %s ) failures\n", $_k, count($_fail));
+            for ($i=0;$i!=count($_fail);$i++){
+                echo "".($i+1).". ".$_fail[$i]."\n";
+            }
         }
+        echo "\n\n";
     }
-    
+
     $size = function($size) {
         $filesizename = array(" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
         return $size ? round($size/pow(1024, ($i = floor(log($size, 1024)))), 2) . $filesizename[$i] : '0 Bytes';
     };
-    
-    echo "\n----------------------------------";
+
+    //echo "\n----------------------------------";
     echo "\nRan $testCount tests in $runtime seconds and used ".$size(round(memory_get_peak_usage(true), 4));
     echo "\n\n";
-    //echo "Total Assertions $assertions\n";
-    //echo "Tests Passed $passTests\n";
-    //echo "Tests Failed $failTests\n";
     if ($failTests != 0) {
-        echo sprintf("FAIL (%s) failures", $failTests);
+        echo sprintf("FAIL (%s)", $failTests);
     } else {
         echo sprintf("PASS");
     }
-    echo " Assertions $passAssertions/".$test->assertionCount();
+    echo "\nAssertions $passAssertions/".$test->assertionCount()."\n";
 });
 
-test('test', function($test){
-    $test->equal(array('a'), array('ab'));
-});
-
-test('another', function($test){
-    $test->equal('no', 'no');
-});
-
-test('andagain', function($t){
-    $t->equal(array('asdf'), array('asdf'));
-});
-
-$engine->fire(Events::START,null,$GLOBALS['_PRGGMRUNIT_EVENT']);
-$engine->fire(Events::TEST,null,$GLOBALS['_PRGGMRUNIT_EVENT']);
-$engine->fire(Events::END,null,$GLOBALS['_PRGGMRUNIT_EVENT']);
+// check if there are any valid tests to run!
+$engine->subscribe(Events::TEST, function($event){
+    if ($GLOBALS['_PRGGMRUNIT_ENGINE']->queue(Events::TEST)->count() == 2) {
+        exit("Failed to recieve any tests to run!\n");
+    }
+}, 'hasTestsCheck', 0, null, 1);

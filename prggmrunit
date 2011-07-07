@@ -1,0 +1,37 @@
+#!/usr/local/bin/php
+<?php
+namespace prggmrunit;
+require 'lib/prggmrunit/prggmrunit.php';
+require 'lib/prggmrunit/api.php';
+
+// dir
+$dir = getcwd().'/';
+
+// startup
+$engine->fire(Events::START, null, $GLOBALS['_PRGGMRUNIT_EVENT']);
+
+// include test files from argument
+if (count($argv) == 1) {
+	exit("Usage: prggmrunit test\n");
+} else {
+	$error = array();
+	for ($i=1;$i!=count($argv);$i++){
+		$ext = (stripos($argv[$i], '.php') !== false) ? '' : '.php';
+		if (file_exists($dir.$argv[$i].$ext)) {
+			require $dir.$argv[$i].$ext;
+		} else {
+			$error[] = "Invalid test file: ".$argv[$i];
+		}
+	}
+	if (count($error) != 0) {
+		echo "\n----------------------------------";
+		echo "\nErrors\n";
+		exit(implode("\n",$error)."\n");
+	}
+}
+
+// run
+$engine->fire(Events::TEST,null,$GLOBALS['_PRGGMRUNIT_EVENT']);
+
+// and done!
+$engine->fire(Events::END,null,$GLOBALS['_PRGGMRUNIT_EVENT']);
