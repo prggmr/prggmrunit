@@ -122,6 +122,26 @@ And a test
         $test->greater100(100);
     });
 
+Results
+
+    prggmrUnit v0.1.0
+    
+    F.
+    
+    ----------------------------------
+    Failures Detected
+    
+    ----------------------------------
+    Test ( equals ) had ( 1 ) failures
+    1. Value 50 is not greater than 100!
+    
+    
+    
+    Ran 2 tests in 0 seconds and used 1.25 MB
+    
+    FAIL (1)
+    Assertions 1/2
+
 
 ### Output
 
