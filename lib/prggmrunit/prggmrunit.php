@@ -34,10 +34,13 @@ if (version_compare(\Prggmr::version(), 'v0.2.0', '<=')) {
 // library version
 define('PRGGMRUNIT_VERSION', 'v0.1.0');
 
+// prggmunit events
 class Events {
     const START = 'prggmrunit_start';
     const TEST  = 'prggmrunit_test';
     const END   = 'prggmrunit_end';
+    const SUITE_STARTUP = 'prggmrunit_suite_startup';
+    const SUITE_SHUTDOWN = 'prggmrunit_suite_startup';
 }
 
 class Test extends \prggmr\Event {
@@ -49,7 +52,7 @@ class Test extends \prggmr\Event {
     protected $_pass = array();
 
     // tests that have ran
-    protected $_run = array();
+    public $_run = array();
 
     // number of assertions run
     protected $_count = 0;
@@ -64,12 +67,18 @@ class Test extends \prggmr\Event {
         'fail'  => 0
     );
 
-    // number of passed assertsion
+    // number of passed assertions
     protected $_assertionPass = 0;
 
-    // number of failed assertion
+    // number of failed assertions
     protected $_assertionFail = 0;
 
+    /**
+     * Runs a unit test and prints the results
+     *
+     * @param  boolean  $test
+     * @param  string  $msg  Failure message
+     */
     public function test($test, $msg)
     {
         $this->_count++;
@@ -110,42 +119,172 @@ class Test extends \prggmr\Event {
         }
     }
 
-    // adds a new avaliable test
+    /**
+     * Adds a new assertion test to run within a unit test.
+     *
+     * @param  object  $closure  Callable php function
+     * @param  string  $name  Test name
+     */
     public function addTest($closure, $name)
     {
         $this->_tests[$name] = $closure;
     }
 
+    /**
+     * Returns a count of the total tests ran.
+     *
+     * @return  integer
+     */
     public function testCount()
     {
         return count($this->_run);
     }
 
+    /**
+     * Returns a count of the total assertions.
+     *
+     * @return  integer
+     */
     public function assertionCount()
     {
         return $this->_count;
     }
 
+    /**
+     * Returns a count of the failed tests.
+     *
+     * @return  integer
+     */
     public function failures()
     {
         return $this->_failures;
     }
 
+    /**
+     * Returns a count of the passed tests.
+     *
+     * @return  integer
+     */
     public function passed()
     {
         return $this->_pass;
     }
 
+    /**
+     * Returns a count of passed assertions.
+     *
+     * @return  integer
+     */
+    public function failedAssertions()
+    {
+        return $this->_assertionFail;
+    }
+
+    /**
+     * Returns a count of passed assertions.
+     *
+     * @return  integer
+     */
+    public function passedAssertions()
+    {
+        return $this->_assertionPass;
+    }
+
+    /**
+     * Adds a new test run.
+     *
+     * @return  integer
+     */
     public function addRun($name)
     {
         $this->_run[] = $name;
+    }
+
+    /**
+     * Returns the ran tests.
+     *
+     * @return array
+     */
+    public function getRuns()
+    {
+        return $this->_run;
+    }
+
+    /**
+     * Adds assertion count.
+     *
+     * @param  integer  $count  Assertion count
+     */
+    public function addAssertion($count = null)
+    {
+        // default add
+        if (null === $count) $this->test(true);
+        $this->test(true);
+    }
+
+    /**
+     * Cloning resets all counts to allow combine at a later point.
+     */
+    public function __clone()
+    {
+        $this->_failures = array();
+        $this->_pass = array();
+        $this->_run = array();
+        $this->_count = 0;
+        $this->_assertionPass = 0;
+        $this->_assertionFail = 0;
+    }
+
+    /**
+     * Combines a test result set.
+     *
+     * @param  object  $test  Test
+     */
+    public function combine(Test $test)
+    {
+        $this->_failures += $test->failures();
+        $this->_pass += $test->passed();
+        $this->_run = array_merge($this->_run, $test->getRuns());
+        $this->_count += $test->assertionCount();
+        $this->_assertionFail += $this->failedAssertions();
+        $this->_assertionPass += $this->passedAssertions();
+    }
+}
+
+class Suite {
+
+    // name of the suite
+    protected $_suite = null;
+
+    // test event
+    protected $_test = null;
+
+    public function __construct($suite, Test $test)
+    {
+        $this->_engine = new \prggmr\Engine();
+        $this->_suite = $suite;
+        $this->_test = $test;
+    }
+
+    public function setUp($function)
+    {
+        $this->_engine->subscribe(Events::SUITE_STARTUP, $function);
+    }
+
+    public function tearDown($function)
+    {
+        $this->_engine->subscribe(Events::SUITE_SHUTDOWN, $function);
+    }
+
+    public function __call($name, $args)
+    {
+        $this->_test->_call($name, $args);
     }
 }
 
 // our main event
 $event = new Test();
 $engine = new \prggmr\Engine();
-// default tests
 
 /**
  * equals test
@@ -291,8 +430,7 @@ $engine->subscribe(Events::START, function($event){
 });
 
 $engine->subscribe(Events::END, function($test){
-
-    $runtime = \Prggmr::instance()->getMilliseconds() - $test->getData('start_time');
+    $runtime = round((\Prggmr::instance()->getMilliseconds() - $test->getData('start_time')) / 1000, 4);
     $testCount = $test->testCount();
     $pass = $test->passed();
     $passTests = 0;
@@ -327,7 +465,6 @@ $engine->subscribe(Events::END, function($test){
         return $size ? round($size/pow(1024, ($i = floor(log($size, 1024)))), 2) . $filesizename[$i] : '0 Bytes';
     };
 
-    //echo "\n----------------------------------";
     echo "\nRan $testCount tests in $runtime seconds and used ".$size(round(memory_get_peak_usage(true), 4));
     echo "\n\n";
     if ($failTests != 0) {

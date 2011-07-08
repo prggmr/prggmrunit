@@ -40,5 +40,14 @@ function test($name, $test) {
     $GLOBALS['_PRGGMRUNIT_ENGINE']->subscribe(\prggmrunit\Events::TEST, $test, $name);
 }
 
+/**
+ * Creates a new testing suite.
+ */
+function suite($name, $test) {
+    $suite = clone $GLOBALS['_PRGGMRUNIT_EVENT'];
+    $engine = $GLOBALS['_PRGGMRUNIT_ENGINE'];
+    $engine->subscribe(\prggmrunit\Events::TEST, $test, $name);
+}
+
 // strange??
 test(null, function(){;});
