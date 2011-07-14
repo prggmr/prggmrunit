@@ -56,24 +56,3 @@ test('event', function($test){
     });
     $test->event('test-event', array('test', 'two' => 'one'));
 });
-
-suite('mytestsuite', function($suite){
-
-    $suite->test('atest', function($test){
-
-    });
-
-    $suite->setUp(function($test){
-
-    });
-
-    $suite->tearDown(function($test){
-
-    });
-
-    // this is a test!
-    $suite->addTest('mytest', function($test){
-
-    });
-
-});
