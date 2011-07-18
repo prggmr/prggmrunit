@@ -211,13 +211,13 @@ class Test extends \prggmr\Event {
     }
 
     /**
-     * Returns the break stastus.
+     * Returns the break status, used for suite testing.
      *
      * @return array
      */
-    public function getRuns()
+    public function getBreaks()
     {
-        return $this->_run;
+        return $this->_break;
     }
 
     /**
@@ -258,6 +258,7 @@ class Test extends \prggmr\Event {
         $this->_count += $test->assertionCount();
         $this->_assertionFail += $this->failedAssertions();
         $this->_assertionPass += $this->passedAssertions();
+        $this->_break = $test->getBreaks();
     }
 }
 
