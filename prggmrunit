@@ -31,7 +31,7 @@ if (count($argv) == 1) {
 }
 
 // run
-$engine->fire(Events::TEST,null,$GLOBALS['_PRGGMRUNIT_EVENT']);
+$engine->fire(Events::TEST, null, $GLOBALS['_PRGGMRUNIT_EVENT']);
 
 // and done!
-$engine->fire(Events::END,null,$GLOBALS['_PRGGMRUNIT_EVENT']);
+$engine->fire(Events::END, null, $GLOBALS['_PRGGMRUNIT_EVENT']);

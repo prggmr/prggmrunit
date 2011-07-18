@@ -56,3 +56,25 @@ test('event', function($test){
     });
     $test->event('test-event', array('test', 'two' => 'one'));
 });
+
+suite('suite', function($suite){
+
+    // startup
+    $suite->setUp(function($suite){
+        // do some setup stuff
+    });
+
+    // teardown
+    $suite->tearDown(function($suite){
+       // do some teardown stuff
+    });
+
+    $suite->test('a_test', function($suite){
+        $suite->object(new \stdClass());
+    });
+
+    $suite->test('ba_test', function($suite){
+        $suite->object(new \stdClass());
+    });
+
+});

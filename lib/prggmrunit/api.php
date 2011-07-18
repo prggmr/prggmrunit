@@ -35,7 +35,6 @@
  * @param  object  $test  Test function
  */
 function test($name, $test) {
-    $GLOBALS['_PRGGMRUNIT_EVENT']->_current = $name;
     $GLOBALS['_PRGGMRUNIT_EVENT']->addRun($name);
     $GLOBALS['_PRGGMRUNIT_ENGINE']->subscribe(\prggmrunit\Events::TEST, $test, $name);
 }
@@ -44,9 +43,11 @@ function test($name, $test) {
  * Creates a new testing suite.
  */
 function suite($name, $test) {
-    $suite = clone $GLOBALS['_PRGGMRUNIT_EVENT'];
-    $engine = $GLOBALS['_PRGGMRUNIT_ENGINE'];
-    $engine->subscribe(\prggmrunit\Events::TEST, $test, $name);
+    $suite = new \prggmrunit\Suite($name, clone $GLOBALS['_PRGGMRUNIT_EVENT']);
+    $GLOBALS['_PRGGMRUNIT_ENGINE']->subscribe(\prggmrunit\Events::TEST, function($event) use ($suite, $test){
+        $test($suite);
+        $GLOBALS['_PRGGMRUNIT_EVENT']->combine($suite->run());
+    }, $name);
 }
 
 // strange??

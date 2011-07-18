@@ -40,7 +40,7 @@ class Events {
     const TEST  = 'prggmrunit_test';
     const END   = 'prggmrunit_end';
     const SUITE_STARTUP = 'prggmrunit_suite_startup';
-    const SUITE_SHUTDOWN = 'prggmrunit_suite_startup';
+    const SUITE_SHUTDOWN = 'prggmrunit_suite_shutdown';
 }
 
 class Test extends \prggmr\Event {
@@ -211,6 +211,16 @@ class Test extends \prggmr\Event {
     }
 
     /**
+     * Returns the break stastus.
+     *
+     * @return array
+     */
+    public function getRuns()
+    {
+        return $this->_run;
+    }
+
+    /**
      * Adds assertion count.
      *
      * @param  integer  $count  Assertion count
@@ -259,26 +269,57 @@ class Suite {
     // test event
     protected $_test = null;
 
+    // startup function
+    protected $_setup = null;
+
+    // teardown function
+    protected $_teardown = null;
+
     public function __construct($suite, Test $test)
     {
         $this->_engine = new \prggmr\Engine();
         $this->_suite = $suite;
         $this->_test = $test;
+        $GLOBALS['_PRGGMRUNIT_ENGINE']->fire(Events::SUITE_STARTUP, array(
+            $suite, $this
+        ));
     }
 
     public function setUp($function)
     {
-        $this->_engine->subscribe(Events::SUITE_STARTUP, $function);
+        $this->_setup = $function;
     }
 
     public function tearDown($function)
     {
-        $this->_engine->subscribe(Events::SUITE_SHUTDOWN, $function);
+        $this->_teardown = $function;
     }
 
     public function __call($name, $args)
     {
         $this->_test->_call($name, $args);
+    }
+
+    public function run()
+    {
+        $this->_engine->fire(Events::TEST, null, $this->_test);
+        $GLOBALS['_PRGGMRUNIT_ENGINE']->fire(Events::SUITE_SHUTDOWN, array(
+            $suite, $this
+        ));
+        return $this->_test;
+    }
+
+    public function test($name, $test)
+    {
+        $this->_test->addRun($name);
+        $subscription = new \prggmr\Subscription($test, $name);
+        if (null !== $this->_setup) {
+            $subscription->preFire($this->_setup);
+        }
+        if (null !== $this->_teardown) {
+            $subscription->postFire($this->_teardown);
+        }
+        $this->_engine->subscribe(\prggmrunit\Events::TEST, $subscription);
     }
 }
 
