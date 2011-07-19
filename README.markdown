@@ -88,7 +88,7 @@ test(function($test){
 });
 ```
 
-### true($var)
+### true
 
 Asserts the given variable or expression equals true.
 
@@ -178,7 +178,7 @@ test(function($test){
 });
 ```
 
-#### event
+### event
 
 Asserts the given event signal result data equals expected result
 
@@ -204,11 +204,12 @@ $event = $GLOBALS['_PRGGMRUNIT_EVENT']
 // the first parameter provided to your custom assertion function will
 // allways be the test event object, followed by the parameters provided
 // from the assertion call.
-$event->addTest(function(test, param1, param2, param3, etc...){
+$event->addTest(function(test, param1, param2, param3, etc...)){
     // perform logic here
 
     // the assertion is added to the count using the "test" function
-    // which expects the first parameter to be either "true|false"
+    // which expects the first parameter to be either "true|false" 
+    // true indicates a pass, false indicates a failure
     // with the second parameter a failure message.
     $test->test(true|false eval, 'failure message');
 }, 'nameofmethod');
