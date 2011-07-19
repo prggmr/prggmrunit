@@ -1,13 +1,14 @@
 # prggmrunit
 
-lightweight event driven unit testing library for PHP 5.3+ applications
+high-performance evented unit testing for PHP 5.3+
 
 ## Introduction
 
-prggmrunit is a unit testing library built using the prggmr event library, it
-is designed to be incredibly simple, intuitive and lighting fast. prggmrunit was
-developed from the hassle of the currently avaliable testing suites being oversized,
-problamatic installations and unituitive API's.
+prggmrunit is a unit testing library built using the prggmr library, it
+is designed to be incredibly simple, intuitive and lighting fast.
+
+prggmrunit was developed from the hassle of the currently avaliable testing suites being oversized,
+problamatic and featuring unituitive API's.
 
 ## Install
 
@@ -15,135 +16,230 @@ This is the only current method of installation an installation script will be w
 
     cd "location for your install"
     git clone git@github.com:prggmrlabs/prggmrunit.git
+    git submodule init
+    git submodule update
     chmod +x prggmrunit
     sudo ln -s prggmrunit /usr/local/bin/
 
 ## Usage
 
-prggmrunit contains a single API function.
+prggmrunit breaks testing into two groups.
 
-    test($name, $test);
+### Ordinary
 
-### Writing Tests
+Ordinary tests are tests which are run independent of a suite.
 
-Writing a unit tests is as follows:
+ex:
 
-    // creates a new tests
-    // the "$test" parameter is the testing suite we use for assertions
-    test('mytestname', function($test){
+```php
+    test(function($test){
         $test->equals('a', 'a');
-    });
+        $test->null(null);
+    }, 'example');
+```
 
-    // and another example
-    test('anothertest', function($test){
-        $test->true((true == 1));
-        $test->false(true);
-    });
 
-### Assertions
+### Suites
 
-prggmrunit provides the following methods for assertions in your unit tests, each
-method below is callable using the "$test" parameter in your tests.
+Suite are a grouping of tests run together allowing for a setUp and tearDown events before and after each test is fun.
 
-#### equals($expected, $actual)
+ex:
+
+```php
+    suite(function($suite){
+        // setup
+        $suite->setUp(function($suite){
+            // init db connection
+            $suite->db = 'my_db_connection';
+        });
+
+        // teardown
+        $suite->tearDown(function($suite){
+            // reset db connection
+            $suite->db = null;
+            if (isset($suite->tear)) unset($suite->tear);
+        });
+
+        $suite->test(function($suite){
+            // is our db connection real?
+            $suite->equals($suite->db, 'my_db_connection');
+            $suite->tear = 'true';
+        }, 'test_my_db');
+
+        $suite->test(function($suite){
+            $suite->false(isset($suite->tear));
+        });
+
+    }, 'example-suite');
+```
+
+## Assertions
+
+prggmrunit provides the following methods for assertions in your unit tests.
+
+### equals
 
 Asserts that $expected is strictly equal to $actual.
 
-#### true($var)
+```php
+    test(function($test){
+        $test->equals(expected, actual);
+    });
+```
 
-Asserts the given variable or expressions equals true.
+### true($var)
 
-#### false($var)
+Asserts the given variable or expression equals true.
 
-Asserts the given variable or expressions equals false.
+```php
+    test(function($test){
+        $test->true(expression);
+    });
+```
 
-#### null($var)
+### false
 
-Asserts the given variable or expressions equals null.
+Asserts the given variable or expression equals false.
 
-#### array($var)
+    test(function($test){
+        $test->false(expression);
+    });
+```
+
+### null
+
+Asserts the given variable or expression equals null.
+
+```php
+    test(function($test){
+        $test->null(expression);
+    });
+```
+
+### array
 
 Asserts the given variable is an array.
 
-#### string($var)
+```php
+    test(function($test){
+        $test->array(variable);
+    });
+```
+
+### string
 
 Asserts the given variable is a string.
 
-#### integer($var)
+```php
+    test(function($test){
+        $test->string(string);
+    });
+```
+
+### integer
 
 Asserts the given variable is an integer.
 
-#### float($var)
+```php
+    test(function($test){
+        $test->integer(variable);
+    });
+```
+
+### float
 
 Asserts the given variable is a float.
 
-#### object($var)
+```php
+    test(function($test){
+        $test->float(variable);
+    });
+```
+
+### object
 
 Asserts the given variable is an object.
 
-#### instanceof($var)
+```php
+    test(function($test){
+        $test->object(variable);
+    });
+```
+
+### instanceof($var)
 
 Asserts the given variable is an instance of a specific object.
 
-#### event($signal, $params, $expected, $event = null, $engine = null)
+```php
+    test(function($test){
+        $test->instanceof(object, expected);
+    });
+```
+
+#### event
 
 Asserts the given event signal result data equals expected result
 
-### Custom Assertions
+```php
+    test(function($test){
+        $test->event(signal, expected[, params, [event, [engine]]]);
+    });
+```
 
-You can also create custom assertions using the following code.
+## Custom assertion tests
 
+prggmrunit allows for the creation of custom assertions
+
+ex:
+
+```php
+    // pull the test event object
     $event = $GLOBALS['_PRGGMRUNIT_EVENT']
 
-    $event->addTest(function($test){
+    // custom assertion tests are added using "addTest" method
+    // you provide the function as the first parameter
+    // the name as the second
+    // the first parameter provided to your custom assertion function will
+    // allways be the test event object, followed by the parameters provided
+    // from the assertion call.
+    $event->addTest(function(test, param1, param2, param3, etc...){
+        // perform logic here
+
+        // the assertion is added to the count using the "test" function
+        // which expects the first parameter to be either "true|false"
+        // with the second parameter a failure message.
         $test->test(true|false eval, 'failure message');
     }, 'nameofmethod');
+```
 
-    $GLOBALS['_PRGGMRUNIT_EVENT'] = $event;
 
-#### Example
+The below example creates a custom assertion function which validates the provided string equals "helloworld".
 
-This will create an assertion to test for values greater than 100
+usage:
 
+```php
     $event = $GLOBALS['_PRGGMRUNIT_EVENT'];
 
-    $event->addTest(function($test, $value){
-        //$test->test(false, 'Value is not an integer');
-        $test->test(($value >= 100), sprintf(
-            'Value %s is not greater than 100!',
-            $value
-        ));
-    }, 'greater100');
+    $event->addTest(function($test, $string){
 
-And a test
+        if (strtolower($string) != 'helloworld') {
+            $test->test(false, sprintf(
+                'String %s does not equal helloworld',
+                $string
+            ));
+        } else {
+            $test->test(true);
+        }
 
-    test('equals', function($test){
-        $test->greater100(50);
-        $test->greater100(100);
+    }, 'helloworld');
+
+    // test assertion
+    test(function($test){
+        $test->helloworld('HelloWorld');
     });
+```
 
-Results
-
-    prggmrUnit v0.1.0
-    
-    F.
-    
-    ----------------------------------
-    Failures Detected
-    
-    ----------------------------------
-    Test ( equals ) had ( 1 ) failures
-    1. Value 50 is not greater than 100!
-    
-    
-    
-    Ran 2 tests in 0 seconds and used 1.25 MB
-    
-    FAIL (1)
-    Assertions 1/2
-
-
-### Output
+### Example Output
 
 #### Passed
 

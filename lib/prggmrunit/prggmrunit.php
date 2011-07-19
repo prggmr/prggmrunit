@@ -243,6 +243,7 @@ class Test extends \prggmr\Event {
         $this->_count = 0;
         $this->_assertionPass = 0;
         $this->_assertionFail = 0;
+        $this->_break = $this->getBreaks();
     }
 
     /**
@@ -310,7 +311,7 @@ class Suite {
         return $this->_test;
     }
 
-    public function test($name, $test)
+    public function test($test, $name = null)
     {
         $this->_test->addRun($name);
         $subscription = new \prggmr\Subscription($test, $name);

@@ -1,0 +1,3 @@
+[submodule "lib/prggmr"]
+	path = lib/prggmr
+	url = git@github.com:prggmrlabs/prggmr.git
