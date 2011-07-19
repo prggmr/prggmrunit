@@ -20,6 +20,7 @@ This is the only current method of installation an installation script will be w
     git submodule update
     chmod +x prggmrunit
     sudo ln -s prggmrunit /usr/local/bin/
+    prggmrunit tests/tests.php
 
 ## Usage
 
