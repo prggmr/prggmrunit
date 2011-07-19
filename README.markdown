@@ -23,6 +23,12 @@ This is the only current method of installation an installation script will be w
 
 ## Usage
 
+prggmrunit is run from the command line using the prggmrunit execution file
+
+    prggmrunit testfile.php[ testfile.php [testfile.php etc..etc..]]
+
+## Writing tests
+
 prggmrunit breaks testing into two groups.
 
 ### Ordinary
