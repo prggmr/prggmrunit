@@ -32,10 +32,10 @@ Ordinary tests are tests which are run independent of a suite.
 ex:
 
 ```php
-    test(function($test){
-        $test->equals('a', 'a');
-        $test->null(null);
-    }, 'example');
+test(function($test){
+    $test->equals('a', 'a');
+    $test->null(null);
+}, 'example');
 ```
 
 
@@ -43,34 +43,35 @@ ex:
 
 Suite are a grouping of tests run together allowing for a setUp and tearDown events before and after each test is fun.
 
-ex:
+### ex:
 
 ```php
-    suite(function($suite){
-        // setup
-        $suite->setUp(function($suite){
-            // init db connection
-            $suite->db = 'my_db_connection';
-        });
+suite(function($suite){
 
-        // teardown
-        $suite->tearDown(function($suite){
-            // reset db connection
-            $suite->db = null;
-            if (isset($suite->tear)) unset($suite->tear);
-        });
+    // setup
+    $suite->setUp(function($suite){
+        // init db connection
+        $suite->db = 'my_db_connection';
+    });
 
-        $suite->test(function($suite){
-            // is our db connection real?
-            $suite->equals($suite->db, 'my_db_connection');
-            $suite->tear = 'true';
-        }, 'test_my_db');
+    // teardown
+    $suite->tearDown(function($suite){
+        // reset db connection
+        $suite->db = null;
+        if (isset($suite->tear)) unset($suite->tear);
+    });
 
-        $suite->test(function($suite){
-            $suite->false(isset($suite->tear));
-        });
+    $suite->test(function($suite){
+        // is our db connection real?
+        $suite->equals($suite->db, 'my_db_connection');
+        $suite->tear = 'true';
+    }, 'test_my_db');
 
-    }, 'example-suite');
+    $suite->test(function($suite){
+        $suite->false(isset($suite->tear));
+    });
+
+}, 'example-suite');
 ```
 
 ## Assertions
@@ -82,9 +83,9 @@ prggmrunit provides the following methods for assertions in your unit tests.
 Asserts that $expected is strictly equal to $actual.
 
 ```php
-    test(function($test){
-        $test->equals(expected, actual);
-    });
+test(function($test){
+    $test->equals(expected, actual);
+});
 ```
 
 ### true($var)
@@ -92,18 +93,19 @@ Asserts that $expected is strictly equal to $actual.
 Asserts the given variable or expression equals true.
 
 ```php
-    test(function($test){
-        $test->true(expression);
-    });
+test(function($test){
+    $test->true(expression);
+});
 ```
 
 ### false
 
 Asserts the given variable or expression equals false.
 
-    test(function($test){
-        $test->false(expression);
-    });
+```php
+test(function($test){
+    $test->false(expression);
+});
 ```
 
 ### null
@@ -111,9 +113,9 @@ Asserts the given variable or expression equals false.
 Asserts the given variable or expression equals null.
 
 ```php
-    test(function($test){
-        $test->null(expression);
-    });
+test(function($test){
+    $test->null(expression);
+});
 ```
 
 ### array
@@ -121,9 +123,9 @@ Asserts the given variable or expression equals null.
 Asserts the given variable is an array.
 
 ```php
-    test(function($test){
-        $test->array(variable);
-    });
+test(function($test){
+    $test->array(variable);
+});
 ```
 
 ### string
@@ -131,9 +133,9 @@ Asserts the given variable is an array.
 Asserts the given variable is a string.
 
 ```php
-    test(function($test){
-        $test->string(string);
-    });
+test(function($test){
+    $test->string(string);
+});
 ```
 
 ### integer
@@ -141,9 +143,9 @@ Asserts the given variable is a string.
 Asserts the given variable is an integer.
 
 ```php
-    test(function($test){
-        $test->integer(variable);
-    });
+test(function($test){
+    $test->integer(variable);
+});
 ```
 
 ### float
@@ -151,9 +153,9 @@ Asserts the given variable is an integer.
 Asserts the given variable is a float.
 
 ```php
-    test(function($test){
-        $test->float(variable);
-    });
+test(function($test){
+    $test->float(variable);
+});
 ```
 
 ### object
@@ -161,9 +163,9 @@ Asserts the given variable is a float.
 Asserts the given variable is an object.
 
 ```php
-    test(function($test){
-        $test->object(variable);
-    });
+test(function($test){
+    $test->object(variable);
+});
 ```
 
 ### instanceof($var)
@@ -171,9 +173,9 @@ Asserts the given variable is an object.
 Asserts the given variable is an instance of a specific object.
 
 ```php
-    test(function($test){
-        $test->instanceof(object, expected);
-    });
+test(function($test){
+    $test->instanceof(object, expected);
+});
 ```
 
 #### event
@@ -181,62 +183,62 @@ Asserts the given variable is an instance of a specific object.
 Asserts the given event signal result data equals expected result
 
 ```php
-    test(function($test){
-        $test->event(signal, expected[, params, [event, [engine]]]);
-    });
+test(function($test){
+    $test->event(signal, expected[, params, [event, [engine]]]);
+});
 ```
 
 ## Custom assertion tests
 
 prggmrunit allows for the creation of custom assertions
 
-ex:
+### ex:
 
 ```php
-    // pull the test event object
-    $event = $GLOBALS['_PRGGMRUNIT_EVENT']
+// pull the test event object
+$event = $GLOBALS['_PRGGMRUNIT_EVENT']
 
-    // custom assertion tests are added using "addTest" method
-    // you provide the function as the first parameter
-    // the name as the second
-    // the first parameter provided to your custom assertion function will
-    // allways be the test event object, followed by the parameters provided
-    // from the assertion call.
-    $event->addTest(function(test, param1, param2, param3, etc...){
-        // perform logic here
+// custom assertion tests are added using "addTest" method
+// you provide the function as the first parameter
+// the name as the second
+// the first parameter provided to your custom assertion function will
+// allways be the test event object, followed by the parameters provided
+// from the assertion call.
+$event->addTest(function(test, param1, param2, param3, etc...){
+    // perform logic here
 
-        // the assertion is added to the count using the "test" function
-        // which expects the first parameter to be either "true|false"
-        // with the second parameter a failure message.
-        $test->test(true|false eval, 'failure message');
-    }, 'nameofmethod');
+    // the assertion is added to the count using the "test" function
+    // which expects the first parameter to be either "true|false"
+    // with the second parameter a failure message.
+    $test->test(true|false eval, 'failure message');
+}, 'nameofmethod');
 ```
 
 
 The below example creates a custom assertion function which validates the provided string equals "helloworld".
 
-usage:
+### usage:
 
 ```php
-    $event = $GLOBALS['_PRGGMRUNIT_EVENT'];
+$event = $GLOBALS['_PRGGMRUNIT_EVENT'];
 
-    $event->addTest(function($test, $string){
+$event->addTest(function($test, $string){
 
-        if (strtolower($string) != 'helloworld') {
-            $test->test(false, sprintf(
-                'String %s does not equal helloworld',
-                $string
-            ));
-        } else {
-            $test->test(true);
-        }
+    if (strtolower($string) != 'helloworld') {
+        $test->test(false, sprintf(
+            'String %s does not equal helloworld',
+            $string
+        ));
+    } else {
+        $test->test(true);
+    }
 
-    }, 'helloworld');
+}, 'helloworld');
 
-    // test assertion
-    test(function($test){
-        $test->helloworld('HelloWorld');
-    });
+// test assertion
+test(function($test){
+    $test->helloworld('HelloWorld');
+});
 ```
 
 ### Example Output
