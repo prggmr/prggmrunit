@@ -21,50 +21,10 @@ namespace prggmrunit;
  * @copyright  Copyright (c), 2010 Nickolas Whiting
  */
 
-
 /**
- * prggmrunit is a unit testing suite for php
+ * prggmrunit engine
  */
-$dir = dirname(realpath(__FILE__));
-require $dir.'/../prggmr/lib/prggmr.php';
-
-if (version_compare(\Prggmr::version(), 'v0.2.0', '<=')) {
-    exit('prggmrunit requires prggmr v0.2.0');
-}
-
-// library version
-define('PRGGMRUNIT_VERSION', 'v0.1.0');
-
-// prggmunit events
-class Events {
-    const START = 'prggmrunit_start';
-    const TEST  = 'prggmrunit_test';
-    const END   = 'prggmrunit_end';
-    const SUITE_STARTUP = 'prggmrunit_suite_startup';
-    const SUITE_SHUTDOWN = 'prggmrunit_suite_shutdown';
-}
-
-/**
- * The prggmrunit engine is a custom prggmr engine adapted for unit
- * testing.
- */
-class Prggmrunit extends \prggmr\Engine {
-    
-    /**
-     * Array of avaliable assertion tests.
-     *
-     * @var array
-     */
-    protected $_assertions = array();
-    
-    /**
-     * Creates a new unit test.
-     * 
-     */
-    
-}
-
-class Test extends \prggmr\Event {
+class Engine extends \prggmr\Engine {
 
     // failed tests
     protected $_failures = array();
@@ -329,7 +289,7 @@ class Suite {
 
     public function run()
     {
-        $this->_engine->fire(\prggmrunit\Events::TEST, null, $this->_test);
+        $this->_engine->fire(Events::TEST, null, $this->_test);
         $GLOBALS['_PRGGMRUNIT_ENGINE']->fire(Events::SUITE_SHUTDOWN, array(
             $suite, $this
         ));

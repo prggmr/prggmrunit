@@ -68,7 +68,8 @@ function suite($test, $name = null) {
     $suite = new \prggmrunit\Suite($name, clone $GLOBALS['_PRGGMRUNIT_EVENT']);
     $GLOBALS['_PRGGMRUNIT_ENGINE']->subscribe(\prggmrunit\Events::TEST, function($event) use ($suite, $test){
         $test($suite);
-        $GLOBALS['_PRGGMRUNIT_EVENT']->combine($suite->run());
+        $results = $suite->run();
+        $GLOBALS['_PRGGMRUNIT_EVENT']->combine($results);
     }, $name, 1000);
 }
 
