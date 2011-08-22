@@ -49,6 +49,14 @@ test(function($test){
    $test->instanceof(new \prggmr\Engine(), 'prggmr\Engine');
 }, 'instanceof');
 
+
+
+test(function($test){
+    // do something with something
+    $test->false(true);
+});
+
+
 test(function($test){
     subscribe('test-event', function($event){
         $event->setData('test');
@@ -58,10 +66,12 @@ test(function($test){
 }, 'event');
 
 suite(function($suite){
-    $suite->setUp(function($suite){
-        $suite->data = 'forty-five';
+    
+    $suite->setUp(function($test){
+        $test->one = 'Forty-Five';
     });
-    $suite->test(function($suite){
-        $suite->equals($suite->data, 'forty-five');
+    
+    $suite->test(function($test){
+        $test->equals($test->one, 'Forty-Five');
     });
-}, 'mysuite');
+});

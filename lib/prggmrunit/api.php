@@ -36,17 +36,14 @@
  * @param  object  $test  Test function
  * @param  string  $name  Name of the unit test
  */
-function test($test, $name = null) {
-    if (null === $name) $name = rand(100, 10000000);
-    $GLOBALS['_PRGGMRUNIT_EVENT']->addRun($name);
-    $GLOBALS['_PRGGMRUNIT_ENGINE']->subscribe(\prggmrunit\Events::TEST, $test, $name);
+function test($test, $name = null, $repeat = 1, $event = null) {
+    return Prggmrunit::instance()->test($test, $name, $repeat, $event);
 }
 
 /**
  * Creates a new testing suite.
  *
- * Suites are a group of tests and enables use of a
- * setUp and tearDown event run before each test.
+ * Suites are a group of tests which ease the use of startup and shutdown.
  *
  * Usage:
  *
@@ -63,15 +60,6 @@ function test($test, $name = null) {
  *
  * }, 'suite-name);
  */
-function suite($test, $name = null) {
-    if (null === $name) $name = rand(100, 10000000);
-    $suite = new \prggmrunit\Suite($name, clone $GLOBALS['_PRGGMRUNIT_EVENT']);
-    $GLOBALS['_PRGGMRUNIT_ENGINE']->subscribe(\prggmrunit\Events::TEST, function($event) use ($suite, $test){
-        $test($suite);
-        $results = $suite->run();
-        $GLOBALS['_PRGGMRUNIT_EVENT']->combine($results);
-    }, $name, 1000);
+function suite($test) {
+    return new \prggmrunit\Suite($test, Prggmrunit::instance());
 }
-
-// strange??
-test(function(){;}, null);
