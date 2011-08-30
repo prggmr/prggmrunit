@@ -101,8 +101,8 @@ class Suite {
         if ($this->_setUp != null) {
             $subscription->preFire($this->_setUp);
         }
-        if ($this->tearDown != null) {
-            $subscription->postFire($this->_setUp);
+        if ($this->_tearDown != null) {
+            $subscription->postFire($this->_tearDown);
         }
         $this->_engine->test($subscription, $name, null, $this->_test);
         return $subscription;

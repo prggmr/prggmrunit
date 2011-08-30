@@ -63,6 +63,20 @@ class Test extends \prggmr\Event {
     protected $_assertionSkip = 0;
     
     /**
+     * Passed assertions.
+     *
+     * @var  array
+     */
+    protected $_passedAssertions = array();
+    
+    /**
+     * Failed assertions.
+     *
+     * @var  array
+     */
+    protected $_failedAssertions = array();
+    
+    /**
      * Reference to the engine running this test.
      *
      * @var  object
@@ -127,12 +141,14 @@ class Test extends \prggmr\Event {
         }
         $result = $this->_engine->assert($name, $args);
         if ($result !== true) {
+            $this->_failedAssertions[] = $name;
             $this->_engine->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
             $this->_assertionFail++;
             // if fail add the backtrace to state message
             $backtrace = debug_backtrace();
             $this->setState(self::FAIL, array($result, $backtrace));
-        } elseif ($result === true) {
+        } else {
+            $this->_passedAssertions[] = $name;
             $this->_engine->fire(Events::TEST_ASSERTION_PASS);
             $this->_assertionPass++;
         }
@@ -166,5 +182,35 @@ class Test extends \prggmr\Event {
     public function passedAssertions()
     {
         return $this->_assertionPass;
+    }
+    
+    /**
+     * Returns a count of skipped assertions.
+     *
+     * @return  integer
+     */
+    public function skippedAssertions()
+    {
+        return $this->_assertionSkip;
+    }
+    
+    /**
+     * Returns array of passed assertion tests.
+     *
+     * @return  array
+     */
+    public function getPassedAssertions()
+    {
+        return $this->_passedAssertions;
+    }
+    
+    /**
+     * Returns array of failed assertion tests.
+     *
+     * @return  array
+     */
+    public function getFailedAssertions()
+    {
+        return $this->_passedAssertions;
     }
 }

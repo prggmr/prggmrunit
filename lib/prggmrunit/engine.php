@@ -110,35 +110,39 @@ class Engine extends \prggmr\Engine {
             $test->getIdentifier()
         );
         
-        $this->_tests[$test->getIdentifier()] = $event;
+        $this->_tests[$test->getIdentifier()] =& $event;
         return $sub;
     }
     
     /**
-     * Runs the unit tests.
+     * Runs testing framework.
+     *
+     * @param  boolean  $reset  Resets all timers to begin at daemon start.
+     * @param  integer  $timeout  Number of milliseconds to run the daemon.
      *
      * @return  void
      */
-    public function run(/* ... */)
+    public function run($reset = false, $timeout = null)
     {
-        $this->fire(Events::START);
         // set an interval to determain if anymore tests to run and shutdown
         // really ... this needs to be fixed 
         $engine = $this;
-        $this->setInterval(function($e) use ($engine){
+        $this->setInterval(function($e) use (&$engine){
             // shutdown if the interval timers are all thats left
             if (count($engine->countTimers()) <= $engine->countIntervals()) {
                 $engine->shutdown();
-                $engine->fire(Events::END);
             }
-        }, 100);
-        
+        }, 10, null, 'Killswitch');
+        // START
+        $this->fire(Events::START, $this);
         // Start the daemon
-        $this->daemon();
+        $this->daemon($reset, $timeout);
+        // END
+        $this->fire(Events::END, $this);
     }
     
     /**
-     * Modifies setInterval to allow trakcing of the number of intervals set.
+     * Modifies setInterval to allow tracking of the number of intervals set.
      *
      * @todo  This should be an addition to the prggmr engine, which also
      * includes timeouts and normal subscriptions.
@@ -157,5 +161,15 @@ class Engine extends \prggmr\Engine {
     public function countIntervals(/* ... */)
     {
         return $this->_intervals;
+    }
+    
+    /**
+     * Returns the tests array.
+     *
+     * @return  array
+     */
+    public function getTests()
+    {
+        return $this->_tests;
     }
 }

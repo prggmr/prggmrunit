@@ -50,28 +50,11 @@ test(function($test){
 }, 'instanceof');
 
 
-
 test(function($test){
-    // do something with something
+    $test->skip();
     $test->false(true);
-});
-
-
-test(function($test){
-    subscribe('test-event', function($event){
-        $event->setData('test');
-        $event->setData('one', 'two');
-    });
-    $test->event('test-event', array('test', 'two' => 'one'));
-}, 'event');
-
-suite(function($suite){
-    
-    $suite->setUp(function($test){
-        $test->one = 'Forty-Five';
-    });
-    
-    $suite->test(function($test){
-        $test->equals($test->one, 'Forty-Five');
-    });
+    $test->equals('a', 'a');
+    $test->true(false);
+    $test->endSkip();
+    $test->true(false);
 });
