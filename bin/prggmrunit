@@ -72,8 +72,10 @@ if (false === $runfile) {
     exit($usage);
 }
 
-require 'lib/prggmrunit/prggmrunit.php';
-require 'lib/prggmrunit/assertions.php';
+$prcwd = dirname(realpath(__FILE__));
+
+require $prcwd.'/../lib/prggmrunit/prggmrunit.php';
+require $prcwd.'/../lib/prggmrunit/assertions.php';
 
 if (isset($showversion)) {
     exit("prggmrunit ".PRGGMRUNIT_VERSION."
@@ -139,8 +141,8 @@ $prggmrunit->subscribe(\prggmrunit\Events::END, function($test) use (&$prggmruni
                 $testsS += 1;
                 break;
         }
-        $assertionF += $_test->failedAssertions();
-        $assertionP += $_test->passedAssertions();
+        $assertionF = $assertionF + $_test->failedAssertions();
+        $assertionP = $assertionP + $_test->passedAssertions();
         $assertionS += $_test->skippedAssertions();
         $assertionC += $_test->assertionCount();
     }

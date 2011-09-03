@@ -46,7 +46,7 @@ test(function($test){
 }, 'object');
 
 test(function($test){
-   $test->instanceof(new \prggmr\Engine(), 'prggmr\Engine');
+   $test->instanceof('prggmr\Engine', new \prggmr\Engine());
 }, 'instanceof');
 
 

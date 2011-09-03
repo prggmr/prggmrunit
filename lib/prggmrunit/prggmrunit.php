@@ -28,7 +28,7 @@ define('PRGGMRUNIT_VERSION', '0.2.0');
 $prggmrunitpath = dirname(realpath(__FILE__));
 require_once $prggmrunitpath.'/../prggmr/lib/prggmr.php';
 
-if (version_compare(\Prggmr::version(), '0.2.0', '<=')) {
+if (!version_compare(\Prggmr::version(), '0.2.0', '<=')) {
     exit('prggmrunit requires prggmr v0.2.0');
 }
 
@@ -37,6 +37,8 @@ require $prggmrunitpath.'/events.php';
 require $prggmrunitpath.'/test.php';
 require $prggmrunitpath.'/suite.php';
 require $prggmrunitpath.'/api.php';
+require $prggmrunitpath.'/output.php';
+require $prggmrunitpath.'/emulator.php';
 
 class Prggmrunit extends \prggmrunit\Engine {
     

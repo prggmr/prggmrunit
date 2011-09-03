@@ -163,7 +163,7 @@ $prggmrunit->assertion(function($object){
 /**
  * instanceof
  */
-$prggmrunit->assertion(function($class, $object){
+$prggmrunit->assertion(function($object, $class){
     if (get_class($class) === $object) return true;
     return sprintf(
         '%s is not an instance of %s',

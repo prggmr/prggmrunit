@@ -139,7 +139,11 @@ class Test extends \prggmr\Event {
             $this->_assertionSkip++;
             return false;
         }
-        $result = $this->_engine->assert($name, $args);
+        try {
+            $result = $this->_engine->assert($name, $args);
+        } catch (\Exception $e) {
+            $result = false;
+        }
         if ($result !== true) {
             $this->_failedAssertions[] = $name;
             $this->_engine->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
@@ -147,10 +151,12 @@ class Test extends \prggmr\Event {
             // if fail add the backtrace to state message
             $backtrace = debug_backtrace();
             $this->setState(self::FAIL, array($result, $backtrace));
+            return false;
         } else {
             $this->_passedAssertions[] = $name;
             $this->_engine->fire(Events::TEST_ASSERTION_PASS);
             $this->_assertionPass++;
+            return true;
         }
     }
 
