@@ -1,7 +1,7 @@
 <?php
 namespace prggmrunit;
 /**
- *  Copyright 2010 Nickolas Whiting
+ *  Copyright 2010-11 Nickolas Whiting
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@ namespace prggmrunit;
  *  limitations under the License.
  *
  *
- * @author  Nickolas Whiting  <me@nwhiting.com>
+ * @author  Nickolas Whiting  <prggmr@gmail.com>
  * @package  prggmrunit
- * @copyright  Copyright (c), 2011 Nickolas Whiting
+ * @copyright  Copyright (c), 2010-11 Nickolas Whiting
  */
 
 /**
@@ -171,7 +171,7 @@ class Test extends \prggmr\Event {
     }
 
     /**
-     * Returns a count of passed assertions.
+     * Returns a count of failed assertions.
      *
      * @return  integer
      */
@@ -217,6 +217,6 @@ class Test extends \prggmr\Event {
      */
     public function getFailedAssertions()
     {
-        return $this->_passedAssertions;
+        return $this->_failedAssertions;
     }
 }

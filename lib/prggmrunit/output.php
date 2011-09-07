@@ -1,7 +1,7 @@
 <?php
 namespace prggmrunit;
 /**
- *  Copyright 2010 Nickolas Whiting
+ *  Copyright 2010-11 Nickolas Whiting
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@ namespace prggmrunit;
  *  limitations under the License.
  *
  *
- * @author  Nickolas Whiting  <me@nwhiting.com>
+ * @author  Nickolas Whiting  <prggmr@gmail.com>
  * @package  prggmrunit
- * @copyright  Copyright (c), 2011 Nickolas Whiting
+ * @copyright  Copyright (c), 2010-11 Nickolas Whiting
  */
 
 /**
@@ -41,7 +41,7 @@ class Output {
      *
      * @var string
      */
-    protected $_default = 'CLI';
+    protected $_default = 'cli';
     
     /**
      * Flag to use output buffering.
@@ -58,11 +58,35 @@ class Output {
      *
      * @return   void
      */
-    public static function initalize(Output_Generator $generator, $buffer = false)
+    public static function initalize(Output_Generator $generator = null, $buffer = false)
     {
-        if (is_bool($buffer)) static::$_outputbuffer = $buffer;
-        
-        
+        if (null === $generator) {
+            $generator = static::$_default;
+        }
+        if (is_bool($buffer)) {
+            ob_start();
+            static::$_outputbuffer = $buffer;
+        }
+        if (is_string($generator)) {
+            // first startup
+            $file = sprintf(
+                'emulator/%s.php',
+                $generator
+            );
+            // attempt to load
+            if (file_exists($file)) {
+                require_once $file;
+            } else {
+                throw new \Exception(
+                    'Could not load default output, output generation simplified'
+                );
+            }
+            static::$_generator = new \prggmrunit\Output\Cli();
+        } else {
+            if ($generator instanceof Output_Generator) {
+                static::$_generator = $generator;
+            }
+        }
     }
     
     /**
@@ -72,6 +96,9 @@ class Output {
      */
     public static function send($string)
     {
+        if (null === static::$_generator) {
+            
+        }
         echo $_generator::send($string);
     }
     

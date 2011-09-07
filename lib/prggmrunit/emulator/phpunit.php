@@ -1,6 +1,6 @@
 <?php
 /**
- *  Copyright 2010 Nickolas Whiting
+ *  Copyright 2010-11 Nickolas Whiting
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,15 +15,27 @@
  *  limitations under the License.
  *
  *
- * @author  Nickolas Whiting  <me@nwhiting.com>
+ * @author  Nickolas Whiting  <prggmr@gmail.com>
  * @package  prggmrunit
- * @copyright  Copyright (c), 2011 Nickolas Whiting
+ * @copyright  Copyright (c), 2010-11 Nickolas Whiting
  */
 
 /**
  * PHPUnit Emulation
  */
-class PHPUnit_Framework_TestCase extends \prggmrunit\Test {}
+class PHPUnit_Framework_TestCase {
+    
+    /**
+     * Constructs a new emulation test for phpunit.
+     *
+     * 
+     */ 
+    public function __construct($name, $data)
+    {
+        $class = new \ReflectionClass($this);
+        var_dump($class->getMethods());
+    }
+}
 
 /**
  * Something to note about phpunit emulation ...
@@ -35,37 +47,66 @@ class PHPUnit_Framework_TestCase extends \prggmrunit\Test {}
 
 
 /**
+ * Used to return either the message given or default failure.
+ *
+ * @param  string  $default  The default.
+ * @param  string  $message  The message.
+ *
+ * @return  string
+ */
+function prgut_pms($default = '', $message = null)
+{
+    return (null === $message) ?
+        $default :
+        $message;
+}
+
+/**
  * Begin emulators
  */
-Emulator::assertion(function($key, array $array, $message = null){
+
+/***
+ * Something to note about this code.
+ *
+ * This is an emulator, to me the code shoudn't need to much description
+ * other than what it's currently doing ... since that is the most important
+ * part ... not variables and names you already know about.
+ */
+
+/**
+ * assertArrayHasKey
+ */
+\prggmrunit\Emulator::assertion(function($key, array $array, $message = null){
     if (!isset($array[$key])) {
-        if (null === $message) {
-            return sprintf(
-                'array %s doesn\'t have key %s',
-                print_r($array, true),
-                $key
-            );
-        }
-        return $message;
+        prgut_pms(sprintf(
+            'array %s doesn\'t have key %s',
+            print_r($array, true),
+            $key
+        ), $message);
     }
     return true;
 }, 'assertArrayHasKey');
 
-Emulator::assertion(function($key, array $array, $message = null){
+
+/**
+ * assertArrayNotHasKey
+ */
+\prggmrunit\Emulator::assertion(function($key, array $array, $message = null){
     if (!isset($array[$key])) {
         return true;   
     }
-    if (null === $message) {
-        return sprintf(
-            'array %s has key %s',
-            print_r($array, true),
-            $key
-        );
-    }
-    return $message;
+    return prgut_pms(sprintf(
+        'array %s has key %s',
+        print_r($array, true),
+        $key
+    ), $message);
 }, 'assertArrayNotHasKey');
 
-Emulator::assertion(function($needle, $haystack, $message = null, $case = false){
+
+/**
+ * assertContains
+ */
+\prggmrunit\Emulator::assertion(function($needle, $haystack, $message = null, $case = false){
     
     if (is_object($haystack)) {
         if ($haystack instanceof \Transversable) {
@@ -74,19 +115,25 @@ Emulator::assertion(function($needle, $haystack, $message = null, $case = false)
                     if ($haystack->contains($needle)) {
                         return true;
                     }
-                    return sprintf(
+                    return prgut_pms(sprintf(
                         'Object %s does not contain %s',
                         get_class($haystack),
                         get_class($needle)
-                    );
+                    ), $message);
                 } else {
                     // splobjectstorage store only objects
-                    return 'SplObjectStorage expects object';
+                    return prgut_pms(
+                        'SplObjectStorage expects object',
+                        $message
+                    );
                 }
             }
             $transverse = true;
         } else {
-            return 'Non Transversable haystack';
+            return prgut_pms(
+                'Non Transversable haystack',
+                $message
+            );
         }
     } elseif (is_array($haystack)) {
         $transverse = true;
@@ -106,10 +153,25 @@ Emulator::assertion(function($needle, $haystack, $message = null, $case = false)
                 }
             }
         }
-        /**
-         * LEFT OFF HERE return
-         */
     }
-
-    self::assertThat($haystack, $constraint, $message);
+    
+    if (is_string($needle)) {
+        if (false === $case) {
+            if (stripos($haystack, $needle) !== false) {
+                return prgut_pms(sprintf(
+                    'String %s does not contain %s (insensitive)',
+                    $haystack, $needle
+                ), $message);
+            }
+        } else {
+            if (strpos($haystack, $needle) !== false) {
+                return prgut_pms(sprintf(
+                    'String %s does not contain %s (sensitive)',
+                    $haystack, $needle
+                ), $message);
+            }
+        }
+    }
+    
+    return 'String, Array, Transversable or SplObjectStorage required';
 }, 'assertContains');

@@ -3,14 +3,16 @@
 /**
  * Directly run files in a prggmr daemon.
  */
-$usage = "usage: prggmrunit [options] FILE
+$usage = "usage: prggmrunit [options...] file
 
 Current options:
-  -v    Display prggmrunit version
-  -s    Sync all timer clocks with the daemons clock on startup.
-  -t    Length of time to run in milliseconds
-  -h    Shows this message
-  -o    Use output buffering, enable if you get no results.
+  -v/--version  Display prggmrunit version
+  -s/--sync     Sync all timer clocks with the daemons clock on startup.
+  -t/--time     Length of time to run in milliseconds
+  -h/--help     Shows this message
+  -b/--buffer   Use output buffering, enable if you get no results.
+  -e/--emulate  Run the emulator for the given framework
+  --em-debug    If you are sure of what you are doing
   
 Examples:
 
@@ -35,59 +37,105 @@ $sync = false;
 $ttr = null;
 // last param is file
 $runfile = $argv[$argc - 1];
-$options = getopt('t:shvo');
+$options = getopt(
+    'qwe:rt:yuiopasdfghjklzxcvbnm',
+    array(
+        'help', 'output', 'version', 'sync', 'time:', 'emulate:'
+    ));
 
 // parse args and check for options
 foreach ($options as $_i => $_arg) {
     switch ($_i) {
         case 'v':
+        case 'version':
             $showversion = true;
             break;
         case 's':
+        case 'sync':
             $sync = true;
             break;
         case 't':
+        case 'time':
             if (false === $_arg || !is_int($_arg + 0)) {
-                exit("invalid option 't'\n".$usage);
+                exit(sprintf(
+                    "invalid format option '%s'\n%s",
+                    $_i, $usage
+                ));
             }
             $ttr = $_arg + 0;
             break;
         case 'h':
+        case 'help':
             exit($usage);
             break;
-        case 'o':
+        case 'b':
+        case 'buffer':
             $outputbuffer = true;
             break;
+        case 'e':
+        case 'emulate':
+            if (false === $_arg) {
+                exit(sprintf(
+                    "invalid format option '%s'\n%s",
+                    $_i, $usage
+                ));
+            }
+            $emulate = $_arg;
+            break;
+        case 'em-debug':
+            // lets make this fun
+            define('PRGGMRUNIT_EMULATION_DEBUG', true);
+            break;
         default:
-            // this does nothing
+            exit(sprintf(
+                    "invalid option '%s'\n%s",
+                    $_i, $usage
+                ));
             break;
     }
 }
 
+// DEFAULT DISABLE OUTPUT BUFERING
 if (!isset($outputbuffer)) {
     $outputbuffer = false;
 }
 
+// NO FILE PROVIDED
 if (false === $runfile) {
     exit($usage);
 }
 
+// INCLUDE LIBRARY
 $prcwd = dirname(realpath(__FILE__));
-
 require $prcwd.'/../lib/prggmrunit/prggmrunit.php';
 require $prcwd.'/../lib/prggmrunit/assertions.php';
 
+
+//VERSION CHECK
 if (isset($showversion)) {
     exit("prggmrunit ".PRGGMRUNIT_VERSION."
 ");
 }
 
+// EMULATOR
+if (isset($emulate)) {
+    if (!array_key_exists($emulate, \prggmrunit\Emulator::getEmulators())) {
+        exit(sprintf(
+            "Emulator '%s' is not a valid emulator\nSupported Emulators\n-----\n%s\n",
+            $emulate,
+            implode("\n", \prggmrunit\Emulator::getEmulators())
+        ));
+    } else {
+        \prggmrunit\Emulator::emulate($emulate);
+    }
+}
+
+// OUTPUT BUFFER
 if ($outputbuffer) {
     ob_start();
 }
 
 $dir = getcwd().'/';
-
 
 $prggmrunit = Prggmrunit::instance();
 
