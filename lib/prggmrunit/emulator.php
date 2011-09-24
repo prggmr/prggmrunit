@@ -67,10 +67,11 @@ class Emulator {
      * Loads an emulator.
      *
      * @param  string  $framework  Framework to emulate.
+     * @param  string  $runfile  File directed to run.
      * 
      * @return  boolean
      */
-    public static function emulate($framework)
+    public static function emulate($framework, $runfile)
     {
         if (isset(static::$_emulators[$framework])) {
             static::$_activated[] = $framework;
@@ -78,6 +79,10 @@ class Emulator {
                 'emulator/%s.php',
                 $framework
             );
+            // tell the system to load the emulator
+            fire(\prggmrunit\Events::EMULATION_LOAD, array(
+                $runfile
+            ));
             return true;
         }
         

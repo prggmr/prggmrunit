@@ -72,6 +72,13 @@ class Engine extends \prggmr\Engine {
         if (isset($this->_assertion[$name])) {
             return call_user_func_array($this->_assertion[$name], $params);
         } else {
+            if (defined('PRGGMRUNIT_EMULATION_DEBUG')) {
+                Output::send(sprintf(
+                    "EMULATION FAILED FOR ASSERTION %s%sParams: %s%s%s",
+                    $name, PHP_EOL, Output::variable($params),
+                    PHP_EOL, PHP_EOL
+                ), Output::DEBUG);
+            }
             return null;
         }
     }

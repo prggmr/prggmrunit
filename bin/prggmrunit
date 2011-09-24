@@ -1,29 +1,22 @@
 #!/usr/bin/php
 <?php
 /**
- * Directly run files in a prggmr daemon.
+ * prggmrunit command line
  */
-$usage = "usage: prggmrunit [options...] file
+$usage = "usage: prggmrunit [options...] file...
 
-Current options:
-  -v/--version  Display prggmrunit version
+Options:
+  -v/--version  Display prggmrunit version.
   -s/--sync     Sync all timer clocks with the daemons clock on startup.
-  -t/--time     Length of time to run in milliseconds
-  -h/--help     Shows this message
+  -t/--time     Length of time to run in milliseconds.
+  -h/--help     Shows this message.
   -b/--buffer   Use output buffering, enable if you get no results.
-  -e/--emulate  Run the emulator for the given framework
-  --em-debug    If you are sure of what you are doing
-  
-Examples:
-
-[ Run unit tests in testfile.php ]
-    
-    prggmrunit testfile.php
-    
-[ Run for 5 seconds and end regardless of testing status ]
-    
-    prggmrunit -t=5000 testfile.php
-    
+  -e/--emulate  Run the emulator for the given framework.
+  -o/--output   Output generator to use.
+  -c/--colors   Generate output with colors
+  --shortvars   Enable or disable shortened variable output. DEFAULT=1
+  --vdepth      Depth to transverse variable outputs. DEFAULT=2
+  --em-debug    If you are sure of what you are doing.
 ";
 
 // force prggmr debug for traces
@@ -38,17 +31,42 @@ $ttr = null;
 // last param is file
 $runfile = $argv[$argc - 1];
 $options = getopt(
-    'qwe:rt:yuiopasdfghjklzxcvbnm',
+    'qwe:rt:yuio:pasdfghjklzxcvbnm',
     array(
-        'help', 'output', 'version', 'sync', 'time:', 'emulate:'
+        'buffer', 'help', 'output:', 'version', 'sync', 'time:', 'emulate:', 'shortvars::',
+        'vdepth:', 'colors', 'em-debug'
     ));
 
-// parse args and check for options
+// parse args and check options
 foreach ($options as $_i => $_arg) {
     switch ($_i) {
         case 'v':
         case 'version':
             $showversion = true;
+            break;
+        case 'shortvars':
+            switch ($_arg) {
+                default:
+                    define('PRGGMRUNIT_SHORTVARS', true);
+                    break;
+                case 1:
+                case 'on':
+                    define('PRGGMRUNIT_SHORTVARS', true);
+                    break;
+                case 0:
+                case 'off':
+                    define('PRGGMRUNIT_SHORTVARS', false);
+                    break;
+            }
+            break;
+        case 'vdepth':
+            if (false === $_arg || !is_int($_arg + 0)) {
+                exit(sprintf(
+                    "invalid format option '%s'\n%s",
+                    $_i, $usage
+                ));
+            }
+            define('PRGGMRUNIT_MAXVARDEPTH', $_arg);
             break;
         case 's':
         case 'sync':
@@ -86,6 +104,20 @@ foreach ($options as $_i => $_arg) {
             // lets make this fun
             define('PRGGMRUNIT_EMULATION_DEBUG', true);
             break;
+        case 'o':
+        case 'output':
+            if (false === $_arg) {
+                exit(sprintf(
+                    "invalid format option '%s'\n%s",
+                    $_i, $usage
+                ));
+            }
+            $output = $_arg;
+            break;
+        case 'c':
+        case 'colors':
+            define('PRGGMRUNIT_OUTPUT_COLORS', true);
+            break;
         default:
             exit(sprintf(
                     "invalid option '%s'\n%s",
@@ -107,8 +139,8 @@ if (false === $runfile) {
 
 // INCLUDE LIBRARY
 $prcwd = dirname(realpath(__FILE__));
-require $prcwd.'/../lib/prggmrunit/prggmrunit.php';
-require $prcwd.'/../lib/prggmrunit/assertions.php';
+require_once $prcwd.'/../lib/prggmrunit/prggmrunit.php';
+require_once $prcwd.'/../lib/prggmrunit/assertions.php';
 
 
 //VERSION CHECK
@@ -117,127 +149,82 @@ if (isset($showversion)) {
 ");
 }
 
-// EMULATOR
+// ARGUMENTS
+// note this works for now ... if it at somepoint it causes problems
+// it can be changed
+array_shift($argv);
+foreach ($argv as $_i => $_v) {
+    if (strpos($_v, '-') !== false) unset($argv[$_i]);
+}
+
+// OUTPUT GENERATOR
+if (isset($output)) {
+    $file = sprintf(
+        '%s/../lib/prggmrunit/output/%s.php',
+        $prcwd,
+        $output);
+    if (file_exists($file)) {
+        require_once $file;
+        $class = sprintf('\prggmrunit\output\%s',
+            ucfirst($output)
+        );
+        if (!class_exists($class)) {
+            exit(sprintf(
+                "Output class (%s) could not be found",
+                $class)
+            );
+        }
+        $class = new $class();
+        \prggmrunit\Output::initalize($class, $outputbuffer);
+    } else {
+        exit(sprintf(
+            "Could not load output source (%s)",
+            $output)
+        );
+    }
+} else {
+    \prggmrunit\Output::initalize(null, $outputbuffer);
+}
+
+// INCLUDE THE TESTS
+
+// EMULATION MODE
 if (isset($emulate)) {
     if (!array_key_exists($emulate, \prggmrunit\Emulator::getEmulators())) {
-        exit(sprintf(
+        \prggmrunit\Output::send(sprintf(
             "Emulator '%s' is not a valid emulator\nSupported Emulators\n-----\n%s\n",
             $emulate,
             implode("\n", \prggmrunit\Emulator::getEmulators())
-        ));
+        ), \prggmrunit\Output::ERROR);
     } else {
-        \prggmrunit\Emulator::emulate($emulate);
-    }
-}
-
-// OUTPUT BUFFER
-if ($outputbuffer) {
-    ob_start();
-}
-
-$dir = getcwd().'/';
-
-$prggmrunit = Prggmrunit::instance();
-
-// BEGINNING OF IT ALL
-$prggmrunit->subscribe(\prggmrunit\Events::START, function($event) use (&$prggmrunit){
-    $prggmrunit->start_time = $prggmrunit->getMilliseconds();
-    echo "prggmrunit ".PRGGMRUNIT_VERSION."\nBy Nickolas Whiting\n\n";
-});
-
-$prggmrunit->subscribe(\prggmrunit\Events::TEST_ASSERTION_PASS, function($event){
-    echo ".";
-});
-
-$prggmrunit->subscribe(\prggmrunit\Events::TEST_ASSERTION_FAIL, function($event){
-    echo "F";
-});
-
-$prggmrunit->subscribe(\prggmrunit\Events::TEST_ASSERTION_SKIP, function($event){
-    echo "S";
-});
-
-// This needs to be cleaned with some bleach ...
-$prggmrunit->subscribe(\prggmrunit\Events::END, function($test) use (&$prggmrunit){
-    
-    $end_time = $prggmrunit->getMilliseconds();
-    $tests = $prggmrunit->getTests();
-    
-    // testing totals
-    $testsP = 0;
-    $assertionP = 0;
-    $testsF = 0;
-    $assertionF = 0;
-    $testsS = 0;
-    $assertionS = 0;
-    $testsC = 0;
-    $assertionC = 0;
-    
-    $failures = array();
-    
-    foreach ($tests as $_index => $_test) {
-        $testsC++;
-        switch ($_test->getState()) {
-            case \prggmrunit\Test::FAIL:
-                $failures[$_index] = $_test->getStateMessage();
-                $testsF += 1;
-                break;
-            case \prggmrunit\Test::PASS:
-                $testsP += 1;
-                break;
-            case \prggmrunit\Test::SKIP:
-                $testsS += 1;
-                break;
-        }
-        $assertionF = $assertionF + $_test->failedAssertions();
-        $assertionP = $assertionP + $_test->passedAssertions();
-        $assertionS += $_test->skippedAssertions();
-        $assertionC += $_test->assertionCount();
-    }
-    
-    $runtime = round(($end_time - $prggmrunit->start_time) / 1000, 4);
-    if (0 != count($failures)) {
-        echo "\n\n============================================================";
-        echo "\nFailures Detected\n";
-        foreach ($failures as $_k => $_fail) {
-            echo "\n------------------------------------------------------------\n";
-            $file = function($file) {
-                $array = explode('/', $file);
-                return str_replace('.php', '', $array[count($array) - 1]);
-            };
-            echo  sprintf(
-                "FAIL : %s (%s)\n------------------------------------------------------------\nLine : %s\nMessage : %s\n\n",
-                $_fail[1][0]['file'],
-                $_k,
-                $_fail[1][0]['line'],
-                $_fail[0]
-            );
+        if (\prggmrunit\Emulator::emulate($emulate, $argv)) {
+            \prggmrunit\Output::send(sprintf(
+                "Running in emulation mode, emulating (%s)%s",
+                $emulate, PHP_EOL
+            ), \prggmrunit\Output::SYSTEM);
+            if (defined('PRGGMRUNIT_EMULATION_DEBUG') &&
+                PRGGMRUNIT_EMULATION_DEBUG == true){
+                \prggmrunit\Output::send(
+                    "EMULATION DEBUG MODE TURNED ON (Have fun)".PHP_EOL
+                , \prggmrunit\Output::DEBUG);
+            }
+        } else {
+            \prggmrunit\Output::send(sprintf(
+                "Failed to load emulator (%s)",
+                $emulate
+            ), \prggmrunit\Output::ERROR);
         }
     }
-
-    $size = function($size) {
-        $filesizename = array(" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
-        return $size ? round($size/pow(1024, ($i = floor(log($size, 1024)))), 2) . $filesizename[$i] : '0 Bytes';
-    };
-    echo "\n============================================================";
-    echo "\nRan $testsC tests in $runtime seconds and used ".$size(round(memory_get_peak_usage(true), 4));
-    echo "\n\n";
-    if ($testsF != 0) {
-        echo sprintf("FAIL (failures=%s, success=%s, skipped=%s)", $testsF, $testsP, $testsS);
-    } else {
-        echo sprintf("PASS (success=%s, skipped=%s)", $testsP, $testsS);
-    }
-    echo "\nAssertions (pass=$assertionP, fail=$assertionF, skip=$assertionS)\n";
-});
-
-// include test files from argument
-if (!file_exists($runfile)) {
-    die("Unknown file : $runfile\n");
 } else {
-    require $runfile;
+    // prggmrunit implementation nice and easy
+    foreach ($argv as $_file) {
+        if (!file_exists($_file)) {
+            \prggmrunit\Output::send("Unknown file : $_file\n", \prggmrunit\Output::ERROR);
+        } else {
+            require_once $_file;
+        }
+    }
 }
+
 // Run the daemon child!
-$prggmrunit->run($sync, $ttr);
-if ($outputbuffer) {
-    ob_end_flush();
-}
+Prggmrunit::instance()->run($sync, $ttr);

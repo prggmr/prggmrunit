@@ -25,9 +25,10 @@ namespace prggmrunit;
  * Events signals.
  */
 class Events {
-    const START = 'prggmrunit_start';
-    const END   = 'prggmrunit_end';
-    const TEST_ASSERTION_FAIL = 'prggmrunit_assertion_fail';
-    const TEST_ASSERTION_PASS = 'prggmrunit_assertion_pass';
-    const TEST_ASSERTION_SKIP = 'prggmrunit_assertion_skip';
+    const START = 0xFB01;
+    const END   = 0xFB02;
+    const TEST_ASSERTION_FAIL = 0xFB03;
+    const TEST_ASSERTION_PASS = 0xFB04;
+    const TEST_ASSERTION_SKIP = 0xFB05;
+    const EMULATION_LOAD = 0xFB06;
 }

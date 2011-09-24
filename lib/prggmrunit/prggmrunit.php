@@ -25,8 +25,13 @@
 // library version
 define('PRGGMRUNIT_VERSION', '0.2.0');
 
+// The creator
+define('PRGGMRUNIT_MASTERMIND', 'Nickolas Whiting');
+
 $prggmrunitpath = dirname(realpath(__FILE__));
-require_once $prggmrunitpath.'/../prggmr/lib/prggmr.php';
+if (!class_exists('Prggmr')) {
+    require_once $prggmrunitpath.'/../prggmr/lib/prggmr.php';
+}
 
 if (!version_compare(\Prggmr::version(), '0.2.0', '<=')) {
     exit('prggmrunit requires prggmr v0.2.0');
