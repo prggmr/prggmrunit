@@ -23,7 +23,7 @@
 /**
  * PHPUnit Emulation
  */
-once(\prggmrunit\Events::EMULATION_LOAD, function($event, $argv){
+once(function($event, $argv){
     
     /**
      * PHPUnit works as follows
@@ -91,11 +91,18 @@ once(\prggmrunit\Events::EMULATION_LOAD, function($event, $argv){
         }
     }
     
-}, 'PHPUnit Emulation Loader');
+}, \prggmrunit\Events::EMULATION_LOAD, 'PHPUnit Emulation Loader');
 
 
 // a test case
-class PHPUnit_Framework_TestCase extends \prggmrunit\Test {
+class PHPUnit_Framework_TestCase extends \prggmrunit\emulator\Test {
+    
+    /**
+     * Framework this test emulates.
+     * 
+     * @var  mixed
+     */
+    protected $_framework = \prggmrunit\Emulator::PHPUNIT;
     
     /**
      * Constructs a new emulation test for phpunit
@@ -114,7 +121,7 @@ class PHPUnit_Framework_TestCase extends \prggmrunit\Test {
                 $suite->tearDown(array($class, 'setUp'));
             }
             foreach ($ref->getMethods() as $_method) {
-                test(new \prggmr\Subscription(array($class, $_method->getName())));
+                test(array($class, $_method->getName()));
             }
         }, $name);
         

@@ -67,11 +67,11 @@ class Emulator {
      * Loads an emulator.
      *
      * @param  string  $framework  Framework to emulate.
-     * @param  string  $runfile  File directed to run.
+     * @param  array  $argv  Test arguments array
      * 
      * @return  boolean
      */
-    public static function emulate($framework, $runfile)
+    public static function emulate($framework, $argv)
     {
         if (isset(static::$_emulators[$framework])) {
             static::$_activated[] = $framework;
@@ -80,9 +80,7 @@ class Emulator {
                 $framework
             );
             // tell the system to load the emulator
-            fire(\prggmrunit\Events::EMULATION_LOAD, array(
-                $runfile
-            ));
+            fire(\prggmrunit\Events::EMULATION_LOAD, array($argv));
             return true;
         }
         
@@ -100,20 +98,71 @@ class Emulator {
     }
     
     /**
-     * Creates a new emulation assertion, also ensures assertions are not added
-     * twice.
+     * Creates a new emulation assertion.
      *
      * @param  object  $closure  Callable php function
      * @param  string  $name  Test name
+     * @param  mixed  $framework  Emulation framework
      *
      * @return  void
      */
-    public static function assertion($closure, $name)
+    public static function assertion($closure, $name, $framework = null)
     {
-        if (!isset(static::$_assertions[$name])) {
-            static::$_assertions[$name] = true;
-            \Prggmrunit::instance()->assertion($closure, $name);
+        if (null === $framework) {
+            // use the last activated emulator
+            $framework = end(static::$_activated);
         }
+        if (!isset(static::$_assertions[$framework])) {
+            static::$_assertions[$framework] = array();
+        }
+        static::$_assertions[$framework][$name] = $closure;
+    }
+    
+    /**
+     * Runs an assertion.
+     *
+     * @param  string  $assertion  Assertion test
+     * @param  array  $params  Parameters
+     * @param  mixed  $framework  Emulation framework
+     * 
+     * @return  boolean
+     */
+    public static function assert($name, $params, $framework = null)
+    {
+        if (null === $framework) {
+            $framework = end($framework);
+        }
+        $result = null;
+        if (isset(static::$_assertions[$framework][$name])) {
+            $result = call_user_func_array(
+                static::$_assertions[$framework][$name], $params
+            );
+        }
+        
+        // fun
+        if (defined('PRGGMRUNIT_EMULATION_DEBUG')) {
+            if ($result !== true) {
+                // everything fails here
+                if ($result === null) {
+                    Output::send(sprintf(
+                        "Emulation framework %s assertion %s does not exist.%s",
+                        $framework, $name, PHP_EOL
+                    ), Output::DEBUG);
+                } else {
+                    Output::send(sprintf(
+                        "Emulation Assertion %s::%s failed.%sParams%s---------%s",
+                        $framework,
+                        $name,
+                        PHP_EOL,
+                        PHP_EOL,
+                        Output::variable($params),
+                        PHP_EOL
+                    ), Output::DEBUG);
+                }
+            }
+        }
+        
+        return $result;
     }
     
     /**

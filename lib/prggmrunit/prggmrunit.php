@@ -44,6 +44,7 @@ require $prggmrunitpath.'/suite.php';
 require $prggmrunitpath.'/api.php';
 require $prggmrunitpath.'/output.php';
 require $prggmrunitpath.'/emulator.php';
+require $prggmrunitpath.'/emulator/test.php';
 
 class Prggmrunit extends \prggmrunit\Engine {
     
