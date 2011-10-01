@@ -86,16 +86,9 @@ class Test extends \prggmr\Event {
     /**
      * Constructs a new test event.
      *
-     * @param  object  $engine  Engine
      */
-    public function __construct($engine)
+    public function __construct(/* ... */)
     {
-        if (!$engine instanceof Engine) {
-            throw new \InvalidArgumentException(
-                'A valid engine object is required.'
-            );
-        }
-        $this->_engine = $engine;
         // by default all tests are passed
         $this->setState(self::PASS);
     }
@@ -105,7 +98,7 @@ class Test extends \prggmr\Event {
      *
      * @return void
      */
-    public function skip()
+    public function skip(/* ... */)
     {
         if ($this->getState() !== self::FAIL) {
             $this->setState(self::SKIP);
@@ -117,7 +110,7 @@ class Test extends \prggmr\Event {
      *
      * @return  void
      */
-    public function endSkip()
+    public function endSkip(/* ... */)
     {
         if ($this->getState() !== self::FAIL) {
             $this->setState(self::PASS);
@@ -134,19 +127,19 @@ class Test extends \prggmr\Event {
         if ($this->getState() === self::FAIL ||
             $this->getState() === self::SKIP) {
             if ($this->getState() === self::SKIP) {
-                $this->_engine->fire(Events::TEST_ASSERTION_SKIP);
+                Prggmrunit::instance()->fire(Events::TEST_ASSERTION_SKIP);
             }
             $this->_assertionSkip++;
             return false;
         }
         try {
-            $result = $this->_engine->assert($name, $args);
+            $result = Prggmrunit::instance()->assert($name, $args);
         } catch (\Exception $e) {
             $result = false;
         }
         if ($result !== true) {
             $this->_failedAssertions[] = $name;
-            $this->_engine->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
+            Prggmrunit::instance()->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
             $this->_assertionFail++;
             // if fail add the backtrace to state message
             $backtrace = debug_backtrace();
@@ -154,7 +147,7 @@ class Test extends \prggmr\Event {
             return false;
         } else {
             $this->_passedAssertions[] = $name;
-            $this->_engine->fire(Events::TEST_ASSERTION_PASS);
+            Prggmrunit::instance()->fire(Events::TEST_ASSERTION_PASS);
             $this->_assertionPass++;
             return true;
         }
@@ -165,7 +158,7 @@ class Test extends \prggmr\Event {
      *
      * @return  integer
      */
-    public function assertionCount()
+    public function assertionCount(/* ... */)
     {
         return $this->_assertionCount;
     }
@@ -175,7 +168,7 @@ class Test extends \prggmr\Event {
      *
      * @return  integer
      */
-    public function failedAssertions()
+    public function failedAssertions(/* ... */)
     {
         return $this->_assertionFail;
     }
@@ -185,7 +178,7 @@ class Test extends \prggmr\Event {
      *
      * @return  integer
      */
-    public function passedAssertions()
+    public function passedAssertions(/* ... */)
     {
         return $this->_assertionPass;
     }
@@ -195,7 +188,7 @@ class Test extends \prggmr\Event {
      *
      * @return  integer
      */
-    public function skippedAssertions()
+    public function skippedAssertions(/* ... */)
     {
         return $this->_assertionSkip;
     }
@@ -205,7 +198,7 @@ class Test extends \prggmr\Event {
      *
      * @return  array
      */
-    public function getPassedAssertions()
+    public function getPassedAssertions(/* ... */)
     {
         return $this->_passedAssertions;
     }
@@ -215,7 +208,7 @@ class Test extends \prggmr\Event {
      *
      * @return  array
      */
-    public function getFailedAssertions()
+    public function getFailedAssertions(/* ... */)
     {
         return $this->_failedAssertions;
     }

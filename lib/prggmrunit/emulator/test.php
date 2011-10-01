@@ -49,6 +49,11 @@ class Test extends \prggmrunit\Test {
     }
     
     /**
+     * Runtime test params.
+     */
+    protected $_runtimeParams = array();
+    
+    /**
      * Calls an assertion.
      */
     public function __call($name, $args = null)

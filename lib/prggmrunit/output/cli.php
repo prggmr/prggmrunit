@@ -209,7 +209,7 @@ class CLI extends unit\Output {
             default:
             case unit\Output::MESSAGE:
                 if (static::$_colors) {
-                    $message .= "\033[1;42m";
+                    $message .= "\033[1;32m";
                 }
                 $message .= sprintf("%s",
                     $string
@@ -220,7 +220,7 @@ class CLI extends unit\Output {
                 break;
             case unit\Output::ERROR:
                 if (static::$_colors) {
-                    $message .= "\033[1;41m";
+                    $message .= "\033[1;31m";
                 }
                 $message .= sprintf("%s",
                     $string
@@ -231,7 +231,7 @@ class CLI extends unit\Output {
                 break;
             case unit\Output::DEBUG:
                 if (static::$_colors) {
-                    $message .= "\033[1;45m";
+                    $message .= "\033[1;35m";
                 }
                 $message .= sprintf("%s",
                     $string
@@ -242,7 +242,7 @@ class CLI extends unit\Output {
                 break;
             case unit\Output::SYSTEM:
                 if (static::$_colors) {
-                    $message .= "\033[1;44m";
+                    $message .= "\033[1;34m";
                 }
                 $message .= sprintf("%s",
                     $string

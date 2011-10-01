@@ -220,6 +220,30 @@ class Output implements Output_Generator {
         
         return "unknown";
     }
+    
+    /**
+     * Outputs a readable backtrace, by default it just dumps it from a for.
+     * The output generator is at fault for providing making it simplified.
+     *
+     * @param  array  $backtrace  debug_print_backtrace()
+     *
+     * @return  void
+     */
+    public static function backtrace($backtrace)
+    {
+        $endtrace = '';
+        for($a=0;$a!=count($backtrace);$a++) {
+            if (isset($backtrace[$a]['file']) && isset($backtrace[$a]['line'])) {
+                $endtrace .= sprintf("{%s} - %s %s %s\n",
+                    $a,
+                    $backtrace[$a]['file'],
+                    $backtrace[$a]['line'],
+                    $backtrace[$a]['function']
+                );
+            }
+        }
+        static::send($endtrace, static::ERROR);
+    }
 }
 
 /**

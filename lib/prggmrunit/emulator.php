@@ -146,19 +146,30 @@ class Emulator {
                 if ($result === null) {
                     Output::send(sprintf(
                         "Emulation framework %s assertion %s does not exist.%s",
-                        $framework, $name, PHP_EOL
+                        Output::variable($framework), Output::variable($name), PHP_EOL
+                    ), Output::DEBUG);
+                    Output::send(sprintf(
+                        "Avaliable emulation assertions %s%s%s",
+                        PHP_EOL,
+                        implode(PHP_EOL, array_keys(static::$_assertions[$framework])),
+                        PHP_EOL
                     ), Output::DEBUG);
                 } else {
                     Output::send(sprintf(
-                        "Emulation Assertion %s::%s failed.%sParams%s---------%s",
+                        "Emulation Assertion %s::%s failed.%s",
                         $framework,
                         $name,
                         PHP_EOL,
-                        PHP_EOL,
-                        Output::variable($params),
                         PHP_EOL
                     ), Output::DEBUG);
                 }
+                Output::send(sprintf(
+                    "Params%s%s%s",
+                    PHP_EOL,
+                    Output::variable($params),
+                    PHP_EOL
+                ), Output::DEBUG);
+                Output::backtrace(debug_backtrace());
             }
         }
         

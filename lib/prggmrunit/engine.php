@@ -101,7 +101,7 @@ class Engine extends \prggmr\Engine {
             }
         }
         if (null === $event || is_object($event) && !$event instanceof Test) {
-            $event = new Test($this);
+            $event = new Test();
         }
         $sub = $this->setTimeout(
             $test,

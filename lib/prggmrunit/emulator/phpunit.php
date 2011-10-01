@@ -32,7 +32,7 @@ once(function($event, $argv){
      * phpunit Test.php
      * phpunit Test Test.php
      *
-     * @http://www.phpunit.de/manual/3.0/en/textui.html
+     * @see http://www.phpunit.de/manual/3.0/en/textui.html
      */
     $c = count($argv);
     $argv = array_merge($argv);
@@ -80,8 +80,6 @@ once(function($event, $argv){
                         \prggmrunit\Output::variable($test), PHP_EOL
                     ), \prggmrunit\Output::ERROR);
                 }
-            } else {
-                $test = new Test();
             }
         } else {
             \prggmrunit\Output::send(sprintf(
@@ -105,11 +103,10 @@ class PHPUnit_Framework_TestCase extends \prggmrunit\emulator\Test {
     protected $_framework = \prggmrunit\Emulator::PHPUNIT;
     
     /**
-     * Constructs a new emulation test for phpunit
+     * Constructs a new emulation test for phpunit.
      */ 
     public function __construct($name = null, $data = null)
     {
-        parent::__construct(Prggmrunit::instance());
         $ref = new \ReflectionClass($this);
         // hopefully php fixes this soon
         $class = $this;
@@ -118,7 +115,7 @@ class PHPUnit_Framework_TestCase extends \prggmrunit\emulator\Test {
                 $suite->tearDown(array($class, 'tearDown'));
             }
             if (method_exists($class, 'setUp')) {
-                $suite->tearDown(array($class, 'setUp'));
+                $suite->setUp(array($class, 'setUp'));
             }
             foreach ($ref->getMethods() as $_method) {
                 test(array($class, $_method->getName()));
@@ -304,29 +301,106 @@ function prgut_pms($default = '', $message = null)
 }, 'assertContains');
 
 /**
-* Asserts that a variable is of a given type.
-*
-* @param string $expected
-* @param mixed  $actual
-* @param string $message
-* @since Method available since Release 3.5.0
-*/
+ * assertInstanceof
+ *
+ * I dont agree that the expected needs to be a string ... just to note
+ */
 \prggmrunit\Emulator::assertion(function($expected, $actual, $message = '') {
-   if (is_string($expected)) {
-       if (class_exists($expected) || interface_exists($expected)) {
-           $constraint = new PHPUnit_Framework_Constraint_IsInstanceOf(
-             $expected
-           );
-       }
+    
+    if (is_string($expected)) {
+        if (class_exists($expected) || interface_exists($expected)) {
+            if ($actual instanceof $expected) {
+                return true;
+            }
+            return prgut_pms(sprintf(
+                "%s is not an instance of %s",
+                \prggmrunit\Output::variable($actual),
+                $expected
+            ));
+        } else {
+            return prgut_pms(sprintf(
+                "Object %s could not be found",
+                $expected
+            ));
+        }
+    }
+    
+    return prgut_pms(
+        "String name required"
+    );
+}, 'assertInstanceof');
 
-       else {
-           throw PHPUnit_Util_InvalidArgumentHelper::factory(
-             1, 'class or interface name'
-           );
-       }
-   } else {
-       throw PHPUnit_Util_InvalidArgumentHelper::factory(1, 'string');
-   }
+/**
+ * assertEquals
+ *
+ * So the assertEquals ... if you have taken the time to look through
+ * the almost insane amount of code and objects that are used to compare
+ * values then reading this is will explain why I did it in a considerably
+ * shorter version.
+ *
+ * phpunit provides a very extensive array of comparisons which is impressive
+ * but realisitically over bloated, php itself provides excellent methods of
+ * comparing variables within itself as expected.
+ *
+ * With all of that said, I am still supporting the emulation 100% so I must
+ * write code that will be compatiable.
+ */
 
-   self::assertThat($actual, $constraint, $message);
-}, 'assertInstanceOf');
+/**
+ * These are the assertions, they are written outside of the assertion
+ * to save on memory, I am taking the approach of an array setup
+ */
+$equalAssertions = array(
+    'type' => array(
+        'accept' => function() {
+            return true;
+        },
+        'assert' => function($expect, $actual, $message = null) {
+            return gettype($expect) ===  gettype($actual);
+        },
+    ),
+    'scalar' => array(
+        'accept' => function($expect, $actual) {
+            if ((is_scalar($expect) xor null === $expect) &&
+                (is_scalar($actual) xor null === $expect)) {
+                return true;
+            }
+            if ((is_string($expect) && is_object($actual) &&
+                method_exists($actual, '__toString')) ||
+                (is_string($actual) && is_object($expect) &&
+                method_exists($expect, '__toString'))) {
+                return true;
+            }
+            return false;
+        },
+        'assert' => function($expect, $actual, $message = null, $delta = 0,
+            $maxdepth = 10, $canonicalize = false, $ignorecase = false) {
+            $expect = (string) $expect;
+            $actual = (string) $actual;
+            if ($ignorecase) {
+                $expect = strtolower($expect);
+                $actual = strtolower($actual);
+            }
+            return $expect === $actual;
+        }
+    ),
+    'double' => array(
+        'accept' => function($expect, $actual) {
+            return (is_numeric($expect) && is_numeric($actual));
+        },
+        'assert' => function($expect, $actual, $message = null, $delta = 0,
+            $maxdepth = 10, $canonicalize = false, $ignorecase = false) {
+            if (is_infinite($expect) || is_infinite($actual)) {
+                return "Cannot compare infinite values ... or can we";
+            }
+        }
+    )
+);
+
+\prggmrunit\Emulator::assertion(function($expected, $actual, $message = '',
+    $delta = 0, $maxDepth = 10, $canonicalize = FALSE, $ignoreCase = FALSE)
+{
+    
+    return true;
+    
+}, 'assertEquals');
