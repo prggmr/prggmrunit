@@ -32,7 +32,7 @@ once(function($event, $argv){
      * phpunit Test.php
      * phpunit Test Test.php
      *
-     * @see http://www.phpunit.de/manual/3.0/en/textui.html
+     * @see http://www.phpunit.de/manual/3.5/en/textui.html
      */
     $c = count($argv);
     $argv = array_merge($argv);
@@ -260,7 +260,7 @@ function prgut_pms($default = '', $message = null)
         if (is_object($needle)) {
             foreach ($haystack as $_needle) {
                 if (($objId && $_needle === $haystack) ||
-					(!$objId && $_needle == $haystack)) {
+                    (!$objId && $_needle == $haystack)) {
                     return true;
                 }
             }
@@ -328,7 +328,7 @@ function prgut_pms($default = '', $message = null)
     return prgut_pms(
         "String name required"
     );
-}, 'assertInstanceof');
+}, 'assertInstanceOf');
 
 /**
  * assertEquals
@@ -348,7 +348,9 @@ function prgut_pms($default = '', $message = null)
 
 /**
  * These are the assertions, they are written outside of the assertion
- * to save on memory, I am taking the approach of an array setup
+ * to save on memory, I am taking the approach of an array setup.
+ *
+ * TODO: Add object,exception,mockobject ( which is ? )
  */
 $equalAssertions = array(
     'type' => array(
@@ -393,14 +395,139 @@ $equalAssertions = array(
             if (is_infinite($expect) || is_infinite($actual)) {
                 return "Cannot compare infinite values ... or can we";
             }
+            if ($delta === 0) {
+                $delta = 0.0000000001;
+            }
+            if (abs($actual - $expect)) {
+                return false;
+            }
+            return true;
         }
-    )
+    ),
+    'array' => array(
+        'accept' => function($expect, $actual) {
+            return is_array($expect) && is_array($actual);
+        },
+        'assert' => function($expect, $actual, $delta = 0, $canonicalize = false,
+            $case = false, &$processed = array()) {
+            if ($canonicalize) {
+                sort($expect);
+                sort($actual);
+            }
+            $pass = true;
+            /**
+             * phpunit compares arrays by basically looping through the entire
+             * array and checking each and every value.
+             */
+            foreach ($expect as $_key => $_value) {
+                $pass = \prggmrunit\Emulator::assert('assertEquals', array(
+                    $_value, $actual[$_key], $delta, $canonicalize, $case, $processed
+                ), \prggmrunit\Emulator::PHPUNIT);
+            }
+            return $pass;
+        }
+    ),
+    'domdocument' => array(
+        'accept' => function($expect, $actual) {
+            return $expect instanceof \DOMDocument && $actual instanceof \DOMDocument;
+        },
+        'assert' => function($expect, $actual) {
+            return $expect->C14N() === $actual->C14N();
+        }
+    ),
+    'resource' => array(
+        'accept' => function($expect, $actual) {
+            return is_resource($expect) && is_resource($actual);
+        },
+        'assert' => function($expect, $actual) {
+            return $expect == $actual;
+        }
+    ),
+    'splobjectstorage' => array(
+        'accept' => function($expect, $actual) {
+            return $expect instanceof \SplObjectStorage && $actual instanceof \SplObjectStorage;
+        },
+        'assert' => function($expect, $actual) {
+            foreach ($expect as $_item) {
+                if (!$actual->contains($_item)) return false;
+            }
+            foreach ($actual as $_item) {
+                if (!$expect->contains($_item)) return false;
+            }
+        }
+    ),
 );
 
-\prggmrunit\Emulator::assertion(function($expected, $actual, $message = '',
-    $delta = 0, $maxDepth = 10, $canonicalize = FALSE, $ignoreCase = FALSE)
+\prggmrunit\Emulator::assertion(function($expect, $actual, $message = '',
+    $delta = 0, $depth = 10, $canonicalize = false, $ignorecase = false) use ($equalAssertions)
 {
+    // everything passes by default >:)
+    $pass = true;
+    
+    foreach ($equalAssertions as $_type => $_func) {
+        if ($_func['accept']($expect, $actual)) {
+            $pass = $_func['assert'](
+                $expect, $actual, $delta, $depth, $canonicalize, $ignorecase
+            );
+        }
+    }
+    
+    // it failed for some reason
+    if ($pass !== true) {
+        return prgut_pms(
+            (!is_string($pass)) ? sprintf(
+                '% does not equal %s',
+                \prggmrunit\Output::variable($expect),
+                \prggmrunit\Output::variable($actual)
+            ) : $pass,
+            $message
+        );
+    }
     
     return true;
     
 }, 'assertEquals');
+
+\prggmrunit\Emulator::assertion(function($var, $message = ''){
+    if ($var === true) {
+        return true;
+    }
+    
+    return prgut_pms(sprintf(
+        "%s is not true",
+        \prggmrunit\Output::variable($var)
+    ), $message);
+}, 'assertTrue');
+
+\prggmrunit\Emulator::assertion(function($var, $message = ''){
+    if ($var === false) {
+        return true;
+    }
+    
+    return prgut_pms(sprintf(
+        "%s is not false",
+        \prggmrunit\Output::variable($var)
+    ), $message);
+}, 'assertFalse');
+
+\prggmrunit\Emulator::assertion(function($var, $message = ''){
+    if ($var !== null) {
+        return true;
+    }
+    
+    return prgut_pms(sprintf(
+        "%s is null",
+        \prggmrunit\Output::variable($var)
+    ), $message);
+}, 'assertNotNull');
+
+\prggmrunit\Emulator::assertion(function($var, $message = ''){
+    if ($var === null) {
+        return true;
+    }
+    
+    return prgut_pms(sprintf(
+        "%s is not null",
+        \prggmrunit\Output::variable($var)
+    ), $message);
+}, 'assertNull');

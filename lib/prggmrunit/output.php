@@ -166,7 +166,10 @@ class Output implements Output_Generator {
     }
     
     /**
-     * Generates PHP vars like printr, var_dump for testing.
+     * Generates PHP vars like printr, var_dump the output is limited
+     * by using shortvars and the maximum output length.
+     *
+     * Recursion is not checked for.
      *
      * @param  mixed  $v
      * @param  integer  $depth  Current transvering depth.
