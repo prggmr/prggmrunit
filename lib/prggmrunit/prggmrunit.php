@@ -30,7 +30,10 @@ define('PRGGMRUNIT_MASTERMIND', 'Nickolas Whiting');
 
 $prggmrunitpath = dirname(realpath(__FILE__));
 if (!class_exists('Prggmr')) {
-    require_once $prggmrunitpath.'/../prggmr/lib/prggmr.php';
+    if (!file_exists('prggmr/lib/prggmr.php')) {
+        exit('prggmr is required please check if prggmr is on your include path.');
+    }
+    require_once 'prggmr/lib/prggmr.php';
 }
 
 if (!version_compare(\Prggmr::version(), '0.2.0', '<=')) {
