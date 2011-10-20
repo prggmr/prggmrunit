@@ -30,14 +30,18 @@ define('PRGGMRUNIT_MASTERMIND', 'Nickolas Whiting');
 
 $prggmrunitpath = dirname(realpath(__FILE__));
 if (!class_exists('Prggmr')) {
-    if (!file_exists('prggmr/lib/prggmr.php')) {
-        exit('prggmr is required please check if prggmr is on your include path.');
+    if (strlen(file_get_contents('prggmr/lib/prggmr.php', true, null, 10, 1)) == 0) {
+        exit('prggmr is required please check if prggmr is on your include path:
+'.get_include_path().PHP_EOL.'
+To install prggmr'.PHP_EOL.'
+cd '.end(explode(':', get_include_path())).' && sudo git clone git://github.com/prggmrlabs/prggmr.git'.PHP_EOL
+            );
     }
     require_once 'prggmr/lib/prggmr.php';
 }
 
 if (!version_compare(\Prggmr::version(), '0.2.0', '<=')) {
-    exit('prggmrunit requires prggmr v0.2.0');
+    exit('prggmrunit requires prggmr v0.2.0'.PHP_EOL);
 }
 
 require $prggmrunitpath.'/engine.php';
