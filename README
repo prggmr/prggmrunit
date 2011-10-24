@@ -1,0 +1,13 @@
+prggmrunit is a high-performance evented unit testing library for php 5.3+
+applications, it has been engineered from the ground up to be incredibly
+lightweight, fast, efficent and robust with simplicity and ease of use in
+mind.
+
+It is written as a direct extension of the prggmr engine to maximize
+performance and is built to serve as a simple to use unit testing framework
+and to replace the monolithic unit testing libraries avaliable.
+
+prggmrunit currently has limited support for running tests built for PHPUnit
+unit tests with NO code modifications required.
+
+Read More @ http://www.prggmr.org
