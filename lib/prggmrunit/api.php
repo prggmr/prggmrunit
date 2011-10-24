@@ -37,7 +37,7 @@
  * @param  string  $name  Name of the unit test
  */
 function test($test, $name = null, $repeat = 1, $event = null) {
-    return Prggmrunit::instance()->test($test, $name, $repeat, $event);
+    return prggmrunit::instance()->test($test, $name, $repeat, $event);
 }
 
 /**
@@ -61,5 +61,31 @@ function test($test, $name = null, $repeat = 1, $event = null) {
  * }, 'suite-name);
  */
 function suite($test) {
-    return new \prggmrunit\Suite($test, Prggmrunit::instance());
+    return new \prggmrunit\Suite($test, prggmrunit::instance());
+}
+
+/**
+ * Registers the setup function for the current suite.
+ *
+ * @param  closure  $closure
+ *
+ * @return  void
+ */
+function setup($function) {
+    if (null !== prggmrunit::instance()->getSuite()) {
+        prggmrunit::instance()->getSuite()->setup($function);
+    }
+}
+
+/**
+ * Registers the teardown function for the current suite.
+ *
+ * @param  closure  $closure
+ *
+ * @return  void
+ */
+function teardown($function) {
+    if (null !== prggmrunit::instance()->getSuite()) {
+        prggmrunit::instance()->getSuite()->teardown($function);
+    }
 }

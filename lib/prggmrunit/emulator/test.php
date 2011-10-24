@@ -82,7 +82,7 @@ class Test extends \prggmrunit\Test {
         }
         if ($result !== true) {
             $this->_failedAssertions[] = $name;
-            \Prggmrunit::instance()->fire(
+            \prggmrunit::instance()->fire(
                 \prggmrunit\Events::TEST_ASSERTION_FAIL,
                 array($this, $result)
             );
@@ -93,7 +93,7 @@ class Test extends \prggmrunit\Test {
             return false;
         } else {
             $this->_passedAssertions[] = $name;
-            \Prggmrunit::instance()->fire(
+            \prggmrunit::instance()->fire(
                 \prggmrunit\Events::TEST_ASSERTION_PASS
             );
             $this->_assertionPass++;

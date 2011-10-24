@@ -92,7 +92,7 @@ class Output implements Output_Generator {
         if (null === $generator) {
             $generator = static::$_default;
         }
-        static::$_prggmrunit = \Prggmrunit::instance();
+        static::$_prggmrunit = \prggmrunit::instance();
         if (is_bool($buffer)) {
             ob_start();
             static::$_outputbuffer = $buffer;
@@ -226,7 +226,7 @@ class Output implements Output_Generator {
     
     /**
      * Outputs a readable backtrace, by default it just dumps it from a for.
-     * The output generator is at fault for providing making it simplified.
+     * The output generator is at fault for providing it simplified.
      *
      * @param  array  $backtrace  debug_print_backtrace()
      *

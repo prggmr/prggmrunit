@@ -22,7 +22,7 @@ namespace prggmrunit;
  */
 
 /**
- * Prggmrunit object is designed around the prggmr
+ * prggmrunit object is designed around the prggmr
  * engine to allow adoption of unit testing with events.
  */
 class Engine extends \prggmr\Engine {
@@ -47,6 +47,13 @@ class Engine extends \prggmr\Engine {
      * @var  integer
      */
     protected $_intervals = 0;
+    
+    /**
+     * Current testing suite.
+     *
+     * @var  object
+     */
+    protected $_suite = null;
     
     /**
      * Adds a new assertion test to run within a unit test.
@@ -88,20 +95,31 @@ class Engine extends \prggmr\Engine {
      */
     public function test($test, $name = null, $repeat = 1, $event = null)
     {
-        if (!$test instanceof \prggmr\Subscription) {
-            if (is_callable($test)) {
-                $test = new \prggmr\Subscription(
-                    $test, $name, $repeat
-                );
-            } else {
-                throw new \InvalidArgumentException(
-                    'prggmrunit\Engine::test expects a closure
-                    or \prggmr\Subscription object'
-                );
-            }
-        }
         if (null === $event || is_object($event) && !$event instanceof Test) {
             $event = new Test();
+        }
+        if (null !== $this->_suite) {
+            $test = new \prggmr\Subscription($test, $name, $repeat);
+            $event = $this->_suite->test();
+            if ($this->_suite->setUp() != null) {
+                $test->preFire($this->_suite->setUp());
+            }
+            if ($this->_suite->tearDown() != null) {
+                $test->postFire($this->_suite->tearDown());
+            };
+        } else {
+            if (!$test instanceof \prggmr\Subscription) {
+                if (is_callable($test)) {
+                    $test = new \prggmr\Subscription(
+                        $test, $name, $repeat
+                    );
+                } else {
+                    throw new \InvalidArgumentException(
+                        'prggmrunit\Engine::test expects a closure
+                        or \prggmr\Subscription object'
+                    );
+                }
+            }
         }
         $sub = $this->setTimeout(
             $test,
@@ -127,7 +145,7 @@ class Engine extends \prggmr\Engine {
         // set an interval to determain if anymore tests to run and shutdown
         // really ... this needs to be fixed 
         $engine = $this;
-        $this->setInterval(function($e) use (&$engine){
+        $this->setInterval(function() use (&$engine){
             // shutdown if the interval timers are all thats left
             if (count($engine->countTimers()) <= $engine->countIntervals()) {
                 $engine->shutdown();
@@ -135,8 +153,8 @@ class Engine extends \prggmr\Engine {
         }, 10, null, 'Killswitch');
         // START
         $this->fire(Events::START, $this);
-        // Start the daemon
-        $this->daemon($reset, $timeout);
+        // Start the loop
+        $this->loop($reset, $timeout);
         // END
         $this->fire(Events::END, $this);
     }
@@ -168,8 +186,36 @@ class Engine extends \prggmr\Engine {
      *
      * @return  array
      */
-    public function getTests()
+    public function getTests(/* ... */)
     {
         return $this->_tests;
+    }
+    
+    /**
+     * Sets the current testing suite.
+     *
+     * Providing blank or null resets.
+     *
+     * @param  object  $suite  \prggmrunit\Suite
+     *
+     * @return  void
+     */
+    public function suite(\prggmrunit\Suite $suite = null)
+    {
+        if (null === $suite) {
+            $this->_suite = null;
+        } else {
+            $this->_suite = $suite;
+        }
+    }
+    
+    /**
+     * Gets the current suite.
+     *
+     * @return  object
+     */
+    public function getSuite(/* ... */)
+    {
+        return $this->_suite;
     }
 }

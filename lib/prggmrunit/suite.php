@@ -33,14 +33,14 @@ class Suite {
      *
      * @var  closure
      */
-    protected $_setUp = null;
+    protected $_setup = null;
     
     /**
      * tearDown function.
      *
      * @var  closure
      */
-    protected $_tearDown = null;
+    protected $_teardown = null;
     
     /**
      * Test object used in the suite.
@@ -53,18 +53,13 @@ class Suite {
      * Creates a new testing suite.
      *
      * @param  closure  $suite
-     * @param  object  prggmrunit\Engine
      */
-    public function __construct($test, $engine)
+    public function __construct($test)
     {
-        if (!$engine instanceof Engine) {
-            throw new \InvalidArgumentException(
-                'A valid engine object is required.'
-            );
-        }
-        $this->_engine = $engine;
-        $this->_test = new Test($engine);
+        $this->_test = new Test();
+        \prggmrunit::instance()->suite($this);
         call_user_func_array($test, array($this));
+        \prggmrunit::instance()->suite();
     }
     
     /**
@@ -72,9 +67,12 @@ class Suite {
      *
      * @param  closure  
      */
-    public function setUp($function)
+    public function setup($function = null)
     {
-        $this->_setUp = $function;
+        if (null === $function) {
+            return $this->_setup;
+        }
+        $this->_setup = $function;
     }
     
     /**
@@ -82,30 +80,22 @@ class Suite {
      *
      * @param  closure
      */
-    public function tearDown($function)
+    public function teardown($function = null)
     {
-        $this->tearDown = $function;
+        if (null === $function) {
+            return $this->_teardown;
+        }
+        $this->_teardown = $function;
     }
     
     /**
-     * Registers a new test in the suite.
+     * Returns the test object associated with this suite.
      *
-     * @param  closure  $function  Test function
-     * @param  string  $name  Test name
-     *
-     * @return  void
+     * @return  object
      */
-    public function test($test, $name = null, $repeat = 1)
+    public function test()
     {
-        $subscription = new \prggmr\Subscription($test, $name, $repeat);
-        if ($this->_setUp != null) {
-            $subscription->preFire($this->_setUp);
-        }
-        if ($this->_tearDown != null) {
-            $subscription->postFire($this->_tearDown);
-        }
-        $this->_engine->test($subscription, $name, null, $this->_test);
-        return $subscription;
+        return $this->_test;
     }
     
 }

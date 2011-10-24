@@ -23,7 +23,7 @@
 /**
  * Default assertions file.
  */
-$prggmrunit = Prggmrunit::instance();
+$prggmrunit = prggmrunit::instance();
 
 /**
  * equals test
@@ -44,7 +44,7 @@ $prggmrunit->assertion(function($signal, $expected, $params = null, $event = nul
     if (null !== $engine) {
         $fire = $engine->fire($signal, $params, $event);
     } else {
-        $fire = \Prggmr::instance()->fire($signal, $params, $event);
+        $fire = \prggmr::instance()->fire($signal, $params, $event);
     }
     if ($fire->getData() === $expected) return true;
     

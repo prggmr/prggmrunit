@@ -7,20 +7,18 @@ $usage = "usage: prggmrunit [options...] file...
 
 Options:
   -v/--version  Display prggmrunit version.
-  -s/--sync     Sync all timer clocks with the daemons clock on startup.
+  -s/--sync     Sync all timer clocks with the loops clock on startup.
   -t/--time     Length of time to run in milliseconds.
   -h/--help     Shows this message.
   -b/--buffer   Use output buffering, enable if you get no results.
   -e/--emulate  Run the emulator for the given framework.
   -o/--output   Output generator to use.
   -c/--colors   Generate output with colors
+  -l/--light    Runs in lightweight mode for use in low memory conditions
   --shortvars   Enable or disable shortened variable output. DEFAULT=1
   --vdepth      Depth to transverse variable outputs. DEFAULT=2
   --em-debug    If you are sure of what you are doing.
 ";
-
-// force prggmr debug for traces
-define('PRGGMR_DEBUG', true);
 
 if (count($argv) == 1) {
     exit($usage);
@@ -34,7 +32,7 @@ $options = getopt(
     'qwe:rt:yuio:pasdfghjklzxcvbnm',
     array(
         'buffer', 'help', 'output:', 'version', 'sync', 'time:', 'emulate:', 'shortvars::',
-        'vdepth:', 'colors', 'em-debug'
+        'vdepth:', 'colors', 'em-debug', 'light'
     ));
 
 // parse args and check options
@@ -118,6 +116,10 @@ foreach ($options as $_i => $_arg) {
         case 'colors':
             define('PRGGMRUNIT_OUTPUT_COLORS', true);
             break;
+        case 'l':
+        case 'light':
+            define('PRGGMRUNIT_LIGHTWEIGHT', true);
+            break;
         default:
             exit(sprintf(
                     "invalid option '%s'\n%s",
@@ -137,11 +139,20 @@ if (false === $runfile) {
     exit($usage);
 }
 
+// RUNNING MODES
+// EMULATATION DEBUG FORCES DEBUG AND EVENTED ERRORS
+// LIGHTWEIGHT DISABLES DEBUG AND EXCEPTION HANDLING
+if (!defined('PRGGMRUNIT_LIGHTWEIGHT') || defined('PRGGMRUNIT_EMULATION_DEBUG')) {
+    // force prggmr debug for traces
+    define('PRGGMR_DEBUG', true);
+    // Turn on prggmr event exceptions
+    define('PRGGMR_EVENTED_EXCEPTIONS', true);
+}
+
 // INCLUDE LIBRARY
 $prcwd = dirname(realpath(__FILE__));
 require_once $prcwd.'/../lib/prggmrunit/prggmrunit.php';
 require_once $prcwd.'/../lib/prggmrunit/assertions.php';
-
 
 //VERSION CHECK
 if (isset($showversion)) {
@@ -186,6 +197,35 @@ if (isset($output)) {
     \prggmrunit\Output::initalize(null, $outputbuffer);
 }
 
+// PRGGMRUNIT EXCEPTION HANDLER
+if (PRGGMR_EVENTED_EXCEPTIONS === true) {
+    subscribe(function($event, $exception){
+        if ($exception instanceof \prggmr\SubscriptionException) {
+            \prggmrunit\Output::send(sprintf(
+                'Event Exception %s (%s - %s)%s%s%s',
+                $exception->getMessage(),
+                $exception->getFile(),
+                $exception->getLine(),
+                PHP_EOL,
+                '----------------',
+                PHP_EOL
+            ), \prggmrunit\Output::DEBUG);
+            \prggmrunit\Output::backtrace($exception->getEvent()->getTrace());
+        } else {
+            \prggmrunit\Output::send(sprintf(
+                'Exception %s (%s - %s)%s%s%s',
+                $exception->getMessage(),
+                $exception->getFile(),
+                $exception->getLine(),
+                PHP_EOL,
+                '----------------',
+                PHP_EOL
+            ), \prggmrunit\Output::DEBUG);
+            \prggmrunit\Output::backtrace($exception->getTrace());
+        }
+    }, prggmr::EXCEPTION, 'prggmrunit Evented Exception Handler');
+}
+
 // INCLUDE THE TESTS
 
 // EMULATION MODE
@@ -226,5 +266,5 @@ if (isset($emulate)) {
     }
 }
 
-// Run the daemon child!
-Prggmrunit::instance()->run($sync, $ttr);
+// Run the loop!!
+prggmrunit::instance()->run($sync, $ttr);

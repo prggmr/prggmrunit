@@ -28,8 +28,9 @@ define('PRGGMRUNIT_VERSION', '0.2.0');
 // The creator
 define('PRGGMRUNIT_MASTERMIND', 'Nickolas Whiting');
 
+// This is a little ugly
 $prggmrunitpath = dirname(realpath(__FILE__));
-if (!class_exists('Prggmr')) {
+if (!class_exists('prggmr')) {
     if (strlen(file_get_contents('prggmr/lib/prggmr.php', true, null, 10, 1)) == 0) {
         exit('prggmr is required please check if prggmr is on your include path:
 '.get_include_path().PHP_EOL.'
@@ -40,7 +41,7 @@ cd '.end(explode(':', get_include_path())).' && sudo git clone git://github.com/
     require_once 'prggmr/lib/prggmr.php';
 }
 
-if (!version_compare(\Prggmr::version(), '0.2.0', '<=')) {
+if (!version_compare(\prggmr::version(), '0.2.0', '<=')) {
     exit('prggmrunit requires prggmr v0.2.0'.PHP_EOL);
 }
 
@@ -53,7 +54,7 @@ require $prggmrunitpath.'/output.php';
 require $prggmrunitpath.'/emulator.php';
 require $prggmrunitpath.'/emulator/test.php';
 
-class Prggmrunit extends \prggmrunit\Engine {
+class prggmrunit extends \prggmrunit\Engine {
     
     /**
      * @var  object|null  Instanceof the singleton
@@ -61,7 +62,7 @@ class Prggmrunit extends \prggmrunit\Engine {
     private static $_instance = null;
 
     /**
-     * Returns instance of the Prggmrunit API.
+     * Returns instance of the prggmrunit API.
      */
     final public static function instance(/* ... */)
     {

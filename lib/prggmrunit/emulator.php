@@ -81,6 +81,27 @@ class Emulator {
             );
             // tell the system to load the emulator
             fire(\prggmrunit\Events::EMULATION_LOAD, array($argv));
+            
+            if (defined('PRGGMRUNIT_EMULATION_DEBUG')) {
+                
+                // Turn off assertion outputs
+                
+                // Assertion Pass
+                \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_PASS, function($event){
+                    $event->halt();
+                }, 'Debugging Halt Pas', 1);
+        
+                // Assertion Fail
+                \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_FAIL, function($event){
+                    $event->halt();
+                }, 'Debugging Halt Fail', 1);
+                
+                // Assertion Skip
+                \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_SKIP, function($event){
+                    $event->halt();
+                }, 'Debugging Halt Skip', 1);
+            }
+            
             return true;
         }
         
@@ -137,10 +158,17 @@ class Emulator {
             $result = call_user_func_array(
                 static::$_assertions[$framework][$name], $params
             );
+            Output::variable($result);
         }
         
         // fun
         if (defined('PRGGMRUNIT_EMULATION_DEBUG')) {
+            Output::send(sprintf(
+                'Ran assertion (%s) results (%s)%s',
+                $name,
+                ($result === true) ? 'pass' : ($result === false) ? 'fail' : 'assertion not avaliable',
+                PHP_EOL
+            ));
             if ($result !== true) {
                 // everything fails here
                 if ($result === null) {

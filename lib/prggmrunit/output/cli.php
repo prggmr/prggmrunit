@@ -62,7 +62,7 @@ class CLI extends unit\Output {
         
         // Testing beings
         static::$_prggmrunit->subscribe(\prggmrunit\Events::START, function(){
-            CLI::$start_time = \Prggmrunit::instance()->getMilliseconds();
+            CLI::$start_time = \prggmrunit::instance()->getMilliseconds();
             CLI::send(sprintf(
                 "prggmrunit %s %s%s%s",
                 PRGGMRUNIT_VERSION, PRGGMRUNIT_MASTERMIND, PHP_EOL, PHP_EOL
@@ -87,8 +87,8 @@ class CLI extends unit\Output {
         // Testing is finished
         static::$_prggmrunit->subscribe(\prggmrunit\Events::END, function($test){
     
-            $end_time = \Prggmrunit::instance()->getMilliseconds();
-            $tests = \Prggmrunit::instance()->getTests();
+            $end_time = \prggmrunit::instance()->getMilliseconds();
+            $tests = \prggmrunit::instance()->getTests();
             
             // testing totals
             $testsP = 0;
@@ -121,6 +121,13 @@ class CLI extends unit\Output {
                 $assertionS += $_test->skippedAssertions();
                 $assertionC += $_test->assertionCount();
             }
+            // the counts are doubled why?
+            // divide by two for now
+            // todo: find a real fix
+            $assertionF = $assertionF/2;
+            $assertionP = $assertionP/2;
+            $assertionS = $assertionS/2;
+            $assertionC = $assertionC/2;
             
             $runtime = round(($end_time - CLI::$start_time) / 1000, 4);
             if (0 != count($failures)) {

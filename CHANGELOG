@@ -1,5 +1,18 @@
 v0.2.0 ( TBD )
 -----------------------------------
+- Added API functions setup and teardown
+- Renamed Suite _tearDown to _tearDown
+- Renamed Suite _setUp to _setup
+- Suite test function now returns a reference to the suite test object
+  rather than creating a new test.
+- Suite no longer contains a reference to the prggmrunit engine
+- Suite pre\postFire functions now return the current functions if provided
+  no parameter
+- Added prggmrunit suite method
+- Rewrote suites to allow a test to be called as just a function rather than
+  a suite method
+- Added PHPUnit Assertion Emulator
+- Added Emulation Support
 - Added prggmrunit bin file
 - Added Tests
 - Added Suite

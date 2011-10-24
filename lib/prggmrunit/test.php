@@ -127,19 +127,19 @@ class Test extends \prggmr\Event {
         if ($this->getState() === self::FAIL ||
             $this->getState() === self::SKIP) {
             if ($this->getState() === self::SKIP) {
-                Prggmrunit::instance()->fire(Events::TEST_ASSERTION_SKIP);
+                \prggmrunit::instance()->fire(Events::TEST_ASSERTION_SKIP);
             }
             $this->_assertionSkip++;
             return false;
         }
         try {
-            $result = Prggmrunit::instance()->assert($name, $args);
+            $result = \prggmrunit::instance()->assert($name, $args);
         } catch (\Exception $e) {
             $result = false;
         }
         if ($result !== true) {
             $this->_failedAssertions[] = $name;
-            Prggmrunit::instance()->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
             $this->_assertionFail++;
             // if fail add the backtrace to state message
             $backtrace = debug_backtrace();
@@ -147,7 +147,7 @@ class Test extends \prggmr\Event {
             return false;
         } else {
             $this->_passedAssertions[] = $name;
-            Prggmrunit::instance()->fire(Events::TEST_ASSERTION_PASS);
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_PASS);
             $this->_assertionPass++;
             return true;
         }
