@@ -1,8 +1,18 @@
-v0.2.0 ( TBD )
+v0.2.0 ( Dec 19, 2011 )
 -----------------------------------
+- Testing output is now configurable via Output classes the default is CLI.
+- All command line output is now handled by Output\CLI
+- Added Output and Output\CLI output classes
+- All default assertions tests are now added using the assertion function.
+- Suites now allow tests to be added anyomously within itself providing a more
+  pleasing API.
+- Fixed a bug causing inaccurate assertions counts due to suites.
+- prggmrunit Engine::assertion now throws an InvalidArgumentException if it is
+  not provided a string for the assertion name
+- Added API function assertion
 - Added API functions setup and teardown
-- Renamed Suite _tearDown to _tearDown
-- Renamed Suite _setUp to _setup
+- Renamed Suite::_tearDown to _tearDown
+- Renamed Suite::_setUp to _setup
 - Suite test function now returns a reference to the suite test object
   rather than creating a new test.
 - Suite no longer contains a reference to the prggmrunit engine

@@ -21,14 +21,18 @@
  */
 
 /**
- * Default assertions file.
+ * Default assertions
+ *
+ * The following assertions are the default avaliable assertions, they 
+ * are automatically registered in the prggmrunit global scope.
  */
-$prggmrunit = prggmrunit::instance();
 
 /**
- * equals test
+ * Equals assertion.
+ *
+ * Asserts that two values are exactly equal.
  */
-$prggmrunit->assertion(function($expect, $actual){
+assertion(function($expect, $actual){
     if ($expect === $actual) return true;
     return sprintf(
         "%s does not equal %s",
@@ -38,9 +42,12 @@ $prggmrunit->assertion(function($expect, $actual){
 }, 'equal');
 
 /**
- * event test
+ * Event assertion.
+ *
+ * Asserts that the getData result associated after the event fire
+ * equals what is contained in the resulting event.
  */
-$prggmrunit->assertion(function($signal, $expected, $params = null, $event = null, $engine = null){
+assertion(function($signal, $expected, $params = null, $event = null, $engine = null){
     if (null !== $engine) {
         $fire = $engine->fire($signal, $params, $event);
     } else {
@@ -56,9 +63,11 @@ $prggmrunit->assertion(function($signal, $expected, $params = null, $event = nul
 }, 'event');
 
 /**
- * exception test
+ * Exception assertion.
+ *
+ * Asserts that the giving code throws the giving Exception.
  */
-$prggmrunit->assertion(function($exception, $code){
+assertion(function($exception, $code){
     try {
         $code();
     } catch (\Exception $e) {
@@ -73,9 +82,11 @@ $prggmrunit->assertion(function($exception, $code){
 }, 'exception');
 
 /**
- * true
+ * True assertion.
+ *
+ * Asserts the provided expression results to true.
  */
-$prggmrunit->assertion(function($var){
+assertion(function($var){
     if ($var === true) return true;
     return sprintf(
         '%s does not equal true',
@@ -84,9 +95,11 @@ $prggmrunit->assertion(function($var){
 }, 'true');
 
 /**
- * false
+ * False assertion.
+ *
+ * Asserts the provided expressions results to false.
  */
-$prggmrunit->assertion(function($var){
+assertion(function($var){
     if ($var === false) return true;
     return sprintf(
         '%s does not equal false',
@@ -95,9 +108,11 @@ $prggmrunit->assertion(function($var){
 }, 'false');
 
 /**
- * null
+ * Null assertion
+ *
+ * Asserts the given expression results to null.
  */
-$prggmrunit->assertion(function($var){
+assertion(function($var){
     if ($var === null) return true;
     return sprintf(
         '%s equal null',
@@ -106,9 +121,11 @@ $prggmrunit->assertion(function($var){
 }, 'null');
 
 /**
- * array
+ * Array assertion
+ *
+ * Asserts the given variable is an array.
  */
-$prggmrunit->assertion(function($array){
+assertion(function($array){
     if (is_array($array)) return true;
     return sprintf(
         '%s is not an array',
@@ -117,9 +134,11 @@ $prggmrunit->assertion(function($array){
 }, 'array');
 
 /**
- * string
+ * String assertion
+ *
+ * Asserts the given variable is a string.
  */
-$prggmrunit->assertion(function($string){
+assertion(function($string){
     if (is_string($string)) return true;
     return sprintf(
         '%s is not a string',
@@ -128,9 +147,11 @@ $prggmrunit->assertion(function($string){
 }, 'string');
 
 /**
- * integer
+ * Integer assertion
+ *
+ * Asserts the given variable is a integer.
  */
-$prggmrunit->assertion(function($int){
+assertion(function($int){
     if (is_int($int)) return true;
     return sprintf(
         '%s is not an integer',
@@ -139,9 +160,11 @@ $prggmrunit->assertion(function($int){
 }, 'integer');
 
 /**
- * float
+ * Float assertion
+ *
+ * Asserts the given variable is a float.
  */
-$prggmrunit->assertion(function($float){
+assertion(function($float){
     if(is_float($float)) return true;
     return sprintf(
         'Failed asserting %s is a float',
@@ -150,9 +173,11 @@ $prggmrunit->assertion(function($float){
 }, 'float');
 
 /**
- * object
+ * Object assertion
+ *
+ * Asserts the given variable is an object.
  */
-$prggmrunit->assertion(function($object){
+assertion(function($object){
     if (is_object($object)) return true;
     return sprintf(
         '%s is not an object',
@@ -161,9 +186,11 @@ $prggmrunit->assertion(function($object){
 }, 'object');
 
 /**
- * instanceof
+ * Instanceof assertion
+ *
+ * Asserts the given object is an instance of the provided class.
  */
-$prggmrunit->assertion(function($object, $class){
+assertion(function($object, $class){
     if (get_class($class) === $object) return true;
     return sprintf(
         '%s is not an instance of %s',

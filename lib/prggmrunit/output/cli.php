@@ -89,7 +89,6 @@ class CLI extends unit\Output {
     
             $end_time = \prggmrunit::instance()->getMilliseconds();
             $tests = \prggmrunit::instance()->getTests();
-            
             // testing totals
             $testsP = 0;
             $assertionP = 0;
@@ -101,37 +100,44 @@ class CLI extends unit\Output {
             $assertionC = 0;
             
             $failures = array();
-            
+            // suites are keep track of and assertions are counted
+            // after running through all tests otherwise the assertion count
+            // is multiplied by the number of tests run in a suite
+            $suites   = array();
             foreach ($tests as $_index => $_test) {
                 $testsC++;
                 switch ($_test->getState()) {
                     case \prggmrunit\Test::FAIL:
                         $failures[$_index] = $_test->getStateMessage();
-                        $testsF += 1;
+                        $testsF++;
                         break;
                     case \prggmrunit\Test::PASS:
-                        $testsP += 1;
+                        $testsP++;
                         break;
                     case \prggmrunit\Test::SKIP:
-                        $testsS += 1;
+                        $testsS++;
                         break;
                 }
-                $assertionF = $assertionF + $_test->failedAssertions();
-                $assertionP = $assertionP + $_test->passedAssertions();
-                $assertionS += $_test->skippedAssertions();
-                $assertionC += $_test->assertionCount();
+                if ($_test->getSuite() === null) {
+                    $assertionF = $assertionF + $_test->failedAssertions();
+                    $assertionP = $assertionP + $_test->passedAssertions();
+                    $assertionS += $_test->skippedAssertions();
+                    $assertionC += $_test->assertionCount();
+                } else {
+                    $hash = spl_object_hash($_test->getSuite());
+                    if (!isset($suites[$hash])) {
+                        $suites[$hash] = $_test;
+                    }
+                }
             }
-            // the counts are doubled why?
-            // divide by two for now
-            // todo: find a real fix
-            $assertionF = $assertionF/2;
-            $assertionP = $assertionP/2;
-            $assertionS = $assertionS/2;
-            $assertionC = $assertionC/2;
-            
+            foreach ($suites as $_suite) {
+                $assertionF += $_suite->failedAssertions();
+                $assertionP += $_suite->passedAssertions();
+                $assertionS += $_suite->skippedAssertions();
+                $assertionC += $_suite->assertionCount();
+            }
             $runtime = round(($end_time - CLI::$start_time) / 1000, 4);
             if (0 != count($failures)) {
-                
                 CLI::send(sprintf(
                     "%s%s====================================================",
                     PHP_EOL, PHP_EOL
@@ -170,8 +176,13 @@ class CLI extends unit\Output {
                 /**
                  * This was authored by another individual
                  */
-                $filesizename = array(" Bytes", " KB", " MB", " GB", " TB", " PB", " EB", " ZB", " YB");
-                return $size ? round($size/pow(1024, ($i = floor(log($size, 1024)))), 2) . $filesizename[$i] : '0 Bytes';
+                $filesizename = array(
+                    " Bytes", " KB", " MB", " GB", 
+                    " TB", " PB", " EB", " ZB", " YB"
+                );
+                return $size ? round(
+                    $size/pow(1024, ($i = floor(log($size, 1024)))), 2
+                ) . $filesizename[$i] : '0 Bytes';
             };
             
             CLI::send(sprintf(
@@ -201,7 +212,7 @@ class CLI extends unit\Output {
                 "%sAssertions (pass=%s, fail=%s, skip=%s)%s",
                 PHP_EOL, $assertionP, $assertionF, $assertionS, PHP_EOL
             ));
-        });
+        }, "CLI Test Output");
     }
     
     /**

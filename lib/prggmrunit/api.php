@@ -89,3 +89,17 @@ function teardown($function) {
         prggmrunit::instance()->getSuite()->teardown($function);
     }
 }
+
+/**
+ * Registers a new assertion for use when testing.
+ *
+ * @param  closure  $function  Anonymous function used to evaluate assertion.
+ * @param  name  $name  Name that will be used to call this assertion.
+ *
+ * @throws  InvalidArgumentException
+ * 
+ * @return  void
+ */
+function assertion($function, $name) {
+    return prggmrunit::instance()->assertion($function, $name);
+}

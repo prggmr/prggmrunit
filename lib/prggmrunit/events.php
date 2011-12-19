@@ -31,4 +31,5 @@ class Events {
     const TEST_ASSERTION_PASS = 0xFB04;
     const TEST_ASSERTION_SKIP = 0xFB05;
     const EMULATION_LOAD = 0xFB06;
+    const TEST = 0xFB07;
 }

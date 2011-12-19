@@ -23,7 +23,7 @@ namespace prggmrunit;
 
 /**
  * A suite is a grouping of tests with few differences, with the major
- * difference of support for setUp and tearDown functions.
+ * difference of support for setUp and tearDown instructions support.
  *
  */
 class Suite {
@@ -53,13 +53,15 @@ class Suite {
      * Creates a new testing suite.
      *
      * @param  closure  $suite
+     * @param  object  $engine  \prggmrunit\Engine
      */
-    public function __construct($test)
+    public function __construct($test, $engine)
     {
-        $this->_test = new Test();
-        \prggmrunit::instance()->suite($this);
+        $this->_test = new Test($engine);
+        $this->_test->setSuite($this);
+        $engine->suite($this);
         call_user_func_array($test, array($this));
-        \prggmrunit::instance()->suite();
+        $engine->suite();
     }
     
     /**

@@ -1,23 +1,25 @@
 #!/usr/bin/php
 <?php
+error_reporting(E_ALL ^ E_STRICT);
 /**
  * prggmrunit command line
  */
 $usage = "usage: prggmrunit [options...] file...
 
 Options:
-  -v/--version  Display prggmrunit version.
+  -b/--buffer   Use output buffering, enable if you get no results.
+  -c/--colors   Generate output with colors
+  -e/--emulate  Run the emulator for the given framework.
+  -h/--help     Shows this message.
+  -l/--light    Runs in lightweight mode for use in low memory conditions.
+  -o/--output   Output generator to use.
   -s/--sync     Sync all timer clocks with the loops clock on startup.
   -t/--time     Length of time to run in milliseconds.
-  -h/--help     Shows this message.
-  -b/--buffer   Use output buffering, enable if you get no results.
-  -e/--emulate  Run the emulator for the given framework.
-  -o/--output   Output generator to use.
-  -c/--colors   Generate output with colors
-  -l/--light    Runs in lightweight mode for use in low memory conditions
+  -v/--version  Display prggmrunit version.
+  
   --shortvars   Enable or disable shortened variable output. DEFAULT=1
   --vdepth      Depth to transverse variable outputs. DEFAULT=2
-  --em-debug    If you are sure of what you are doing.
+  --em-debug    For developing emulators
 ";
 
 if (count($argv) == 1) {
@@ -33,7 +35,8 @@ $options = getopt(
     array(
         'buffer', 'help', 'output:', 'version', 'sync', 'time:', 'emulate:', 'shortvars::',
         'vdepth:', 'colors', 'em-debug', 'light'
-    ));
+    )
+);
 
 // parse args and check options
 foreach ($options as $_i => $_arg) {
@@ -156,8 +159,7 @@ require_once $prcwd.'/../lib/prggmrunit/assertions.php';
 
 //VERSION CHECK
 if (isset($showversion)) {
-    exit("prggmrunit ".PRGGMRUNIT_VERSION."
-");
+    exit("prggmrunit ".PRGGMRUNIT_VERSION.PHP_EOL);
 }
 
 // ARGUMENTS

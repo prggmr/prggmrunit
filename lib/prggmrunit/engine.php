@@ -60,9 +60,18 @@ class Engine extends \prggmr\Engine {
      *
      * @param  object  $closure  Callable php function
      * @param  string  $name  Test name
+     *
+     * @throws  InvalidArgumentException
+     * 
+     * @return  void
      */
     public function assertion($closure, $name)
     {
+        if (!is_string($name)) {
+            throw new \InvalidArgumentException(
+                'assertion name must be a string'
+            );
+        }
         $this->_assertion[$name] = $closure;
     }
     
@@ -96,7 +105,7 @@ class Engine extends \prggmr\Engine {
     public function test($test, $name = null, $repeat = 1, $event = null)
     {
         if (null === $event || is_object($event) && !$event instanceof Test) {
-            $event = new Test();
+            $event = new Test($this);
         }
         if (null !== $this->_suite) {
             $test = new \prggmr\Subscription($test, $name, $repeat);
@@ -121,6 +130,7 @@ class Engine extends \prggmr\Engine {
                 }
             }
         }
+        
         $sub = $this->setTimeout(
             $test,
             0,
@@ -165,10 +175,10 @@ class Engine extends \prggmr\Engine {
      * @todo  This should be an addition to the prggmr engine, which also
      * includes timeouts and normal subscriptions.
      */
-    public function setInterval($subscription, $interval, $vars = null, $identifier = null, $exhaust = 0)
+    public function setInterval($subscription, $interval, $vars = null, $identifier = null, $exhaust = 0, $start = null)
     {
         $this->_intervals++;
-        parent::setInterval($subscription, $interval, $vars, $identifier, $exhaust);
+        parent::setInterval($subscription, $interval, $vars, $identifier, $exhaust, $start);
     }
     
     /**
