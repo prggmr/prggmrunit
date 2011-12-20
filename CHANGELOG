@@ -6,6 +6,8 @@ v0.2.1 ( Dec 20, 2011 )
 - Test messages are now stored seperately from the event state
   messages.
 - Test results are now stored seperately from the event state.
+- Fixed a bug causing tests within a suite to duplicate failure messages
+  on output.
 
 v0.2.0 ( Dec 19, 2011 )
 -----------------------------------

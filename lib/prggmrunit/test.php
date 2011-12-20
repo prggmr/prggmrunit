@@ -120,7 +120,7 @@ class Test extends \prggmr\Event {
     {
         $this->_engine = $engine;
         // by default all tests are passed
-        $this->setState(self::PASS);
+        $this->setTestResult(self::PASS);
     }
     
     /**
@@ -130,8 +130,8 @@ class Test extends \prggmr\Event {
      */
     public function skip(/* ... */)
     {
-        if ($this->getState() !== self::FAIL) {
-            $this->setState(self::SKIP);
+        if ($this->getTestResult() !== self::FAIL) {
+            $this->setTestResult(self::SKIP);
         }
     }
     
@@ -142,8 +142,8 @@ class Test extends \prggmr\Event {
      */
     public function endSkip(/* ... */)
     {
-        if ($this->getState() !== self::FAIL) {
-            $this->setState(self::PASS);
+        if ($this->getTestResult() !== self::FAIL) {
+            $this->setTestResult(self::PASS);
         }
     }
     
