@@ -51,10 +51,16 @@ test(function($test){
 
 
 test(function($test){
-    $test->skip();
     $test->false(true);
-    $test->equals('a', 'a');
+    $test->equal('a', 'a');
+    $test->false(false);
     $test->true(false);
-    $test->endSkip();
-    $test->true(false);
+});
+
+test(function($test){
+    $test->false(false);
+    $test->equal('abc', 'abc');
+    $test->false(false);
+    $test->true(true);
+    $test->instanceof('prggmr\Engine', $test);
 });

@@ -1,3 +1,12 @@
+v0.2.1 ( Dec 20, 2011 )
+-----------------------------------
+- Test messages can now be set using addTestMessage
+- Test message are now retrieved using getTestMessages.
+- Tests results are now retrieved using getTestResult()
+- Test messages are now stored seperately from the event state
+  messages.
+- Test results are now stored seperately from the event state.
+
 v0.2.0 ( Dec 19, 2011 )
 -----------------------------------
 - Testing output is now configurable via Output classes the default is CLI.

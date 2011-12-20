@@ -106,19 +106,20 @@ class CLI extends unit\Output {
             $suites   = array();
             foreach ($tests as $_index => $_test) {
                 $testsC++;
-                switch ($_test->getState()) {
-                    case \prggmrunit\Test::FAIL:
-                        $failures[$_index] = $_test->getStateMessage();
-                        $testsF++;
-                        break;
-                    case \prggmrunit\Test::PASS:
-                        $testsP++;
-                        break;
-                    case \prggmrunit\Test::SKIP:
-                        $testsS++;
-                        break;
-                }
                 if ($_test->getSuite() === null) {
+                    switch ($_test->getTestResult()) {
+                        case \prggmrunit\Test::FAIL:
+                            $messages = $_test->getTestMessages();
+                            $failures[] = $messages[\prggmrunit\Output::ERROR];
+                            $testsF++;
+                            break;
+                        case \prggmrunit\Test::PASS:
+                            $testsP++;
+                            break;
+                        case \prggmrunit\Test::SKIP:
+                            $testsS++;
+                            break;
+                    }
                     $assertionF = $assertionF + $_test->failedAssertions();
                     $assertionP = $assertionP + $_test->passedAssertions();
                     $assertionS += $_test->skippedAssertions();
@@ -131,6 +132,19 @@ class CLI extends unit\Output {
                 }
             }
             foreach ($suites as $_suite) {
+                switch ($_suite->getTestResult()) {
+                    case \prggmrunit\Test::FAIL:
+                        $messages = $_suite->getTestMessages();
+                        $failures[] = $messages[\prggmrunit\Output::ERROR];
+                        $testsF++;
+                        break;
+                    case \prggmrunit\Test::PASS:
+                        $testsP++;
+                        break;
+                    case \prggmrunit\Test::SKIP:
+                        $testsS++;
+                        break;
+                }
                 $assertionF += $_suite->failedAssertions();
                 $assertionP += $_suite->passedAssertions();
                 $assertionS += $_suite->skippedAssertions();
@@ -143,32 +157,29 @@ class CLI extends unit\Output {
                     PHP_EOL, PHP_EOL
                 ), CLI::ERROR);
                 CLI::send(sprintf(
-                    "%sFailures Detected",
+                    "%sFailures Detected%s",
+                    PHP_EOL,
                     PHP_EOL
                 ), CLI::ERROR);
-                foreach ($failures as $_k => $_fail) {
-                    CLI::send(sprintf(
-                        "%s------------------------------------------------%s",
-                        PHP_EOL, PHP_EOL
-                    ), CLI::ERROR);
-                    $file = function($file) {
-                        $array = explode('/', $file);
-                        return str_replace('.php', '', $array[count($array)-1]);
-                    };
-                    CLI::send(sprintf(
-                        "FAIL : %s (%s)%s------------------------------------",
-                        $_fail[1][0]['file'],
-                        $_k,
-                        PHP_EOL
-                    ), CLI::ERROR);
-                    CLI::send(sprintf(
-                        "%sLine : %s%sMessage : %s%s%s",
-                        PHP_EOL,
-                        $_fail[1][0]['line'],
-                        PHP_EOL,
-                        $_fail[0],
-                        PHP_EOL, PHP_EOL
-                    ), CLI::ERROR);
+                foreach ($failures as $_failure) {
+                    foreach ($_failure as $_k => $_fail) {
+                        CLI::send(sprintf(
+                            "%s--------------------------------------------%s",
+                            PHP_EOL, PHP_EOL
+                        ), CLI::ERROR);
+                        CLI::send(sprintf(
+                            "File : %s %s",
+                            $_fail['data'][0]['file'],
+                            PHP_EOL
+                        ), CLI::ERROR);
+                        CLI::send(sprintf(
+                            "Line : %s%sMessage : %s%s%s",
+                            $_fail['data'][0]['line'],
+                            PHP_EOL,
+                            $_fail['message'],
+                            PHP_EOL, PHP_EOL
+                        ), CLI::ERROR);
+                    }
                 }
             }
             

@@ -33,7 +33,7 @@ class Test extends \prggmr\Event {
     const FAIL = 0x04;
     const PASS = 0x05;
     const SKIP = 0x06;
-    
+
     /**
      * Number of assertions run
      *
@@ -96,6 +96,20 @@ class Test extends \prggmr\Event {
      * @var  object|null
      */
     protected $_suite = null;
+
+    /**
+     * Result of the run test.
+     *
+     * @var  integer
+     */
+    protected $_testResult = null;
+
+    /**
+     * Messages associated with test run.
+     *
+     * @var  array
+     */
+    protected $_testMessages = array();
     
     /**
      * Constructs a new test event.
@@ -140,9 +154,9 @@ class Test extends \prggmr\Event {
     {
         $this->_assertionCount++;
         // skip if fail or skip state
-        if ($this->getState() === self::FAIL ||
-            $this->getState() === self::SKIP) {
-            if ($this->getState() === self::SKIP) {
+        if ($this->getTestResult() === self::FAIL ||
+            $this->getTestResult() === self::SKIP) {
+            if ($this->getTestResult() === self::SKIP) {
                 $this->_engine->fire(Events::TEST_ASSERTION_SKIP);
             }
             $this->_skippedAssertions[] = $name;
@@ -158,9 +172,10 @@ class Test extends \prggmr\Event {
             $this->_failedAssertions[] = $name;
             $this->_engine->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
             $this->_assertionFail++;
-            // if fail add the backtrace to state message
+            // if fail add the backtrace
             $backtrace = debug_backtrace();
-            $this->setState(self::FAIL, array($result, $backtrace));
+            $this->setTestResult(self::FAIL);
+            $this->addTestMessage($result, $backtrace, Output::ERROR);
             return false;
         } else {
             $this->_passedAssertions[] = $name;
@@ -168,6 +183,59 @@ class Test extends \prggmr\Event {
             $this->_assertionPass++;
             return true;
         }
+    }
+
+    /**
+     * Sets the test result.
+     * 
+     * @param  integer  $result
+     *
+     * @return  void
+     */
+    public function setTestResult($result) 
+    {
+        $this->_testResult = $result; 
+    }
+
+    /**
+     * Returns the test result.
+     *
+     * @return  integer
+     */
+    public function getTestResult()
+    {
+        return $this->_testResult;
+    }
+
+    /**
+     * Sets a message for the test.
+     *
+     * @param  string  $message
+     * @param  mixed  $data
+     * @param  integer  $type 
+     * 
+     * @return  void
+     */
+    public function addTestMessage($message, $data = null, $type = Output::MESSAGE)
+    {
+        if (!isset($this->_testMessages[$type])) {
+            $this->_testMessages[$type] = array();
+        }
+
+        $this->_testMessages[$type][] = array(
+            'message' => $message,
+            'data'    => $data
+        );
+    }
+
+    /**
+     * Returns messages associated with the test.
+     *
+     * @return  array
+     */
+    public function getTestMessages()
+    {
+        return $this->_testMessages;
     }
 
     /**

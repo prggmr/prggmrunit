@@ -36,8 +36,8 @@ assertion(function($expect, $actual){
     if ($expect === $actual) return true;
     return sprintf(
         "%s does not equal %s",
-        print_r($actual, true),
-        print_r($expect, true)
+        \prggmrunit\Output::variable($actual, true),
+        \prggmrunit\Output::variable($expect, true)
     );
 }, 'equal');
 
@@ -57,8 +57,8 @@ assertion(function($signal, $expected, $params = null, $event = null, $engine = 
     
     return sprintf(
         "Event data %s does not equal %s",
-        print_r($fire->getData(), true),
-        print_r($expected, true)
+        \prggmrunit\Output::variable($fire->getData()),
+        \prggmrunit\Output::variable($expected)
     );
 }, 'event');
 
@@ -90,7 +90,7 @@ assertion(function($var){
     if ($var === true) return true;
     return sprintf(
         '%s does not equal true',
-        print_r($var, true)
+        \prggmrunit\Output::variable($var)
     );
 }, 'true');
 
@@ -103,7 +103,7 @@ assertion(function($var){
     if ($var === false) return true;
     return sprintf(
         '%s does not equal false',
-        print_r($var, true)
+        \prggmrunit\Output::variable($var)
     );
 }, 'false');
 
@@ -116,7 +116,7 @@ assertion(function($var){
     if ($var === null) return true;
     return sprintf(
         '%s equal null',
-        print_r($var, true)
+        \prggmrunit\Output::variable($var)
     );
 }, 'null');
 
@@ -129,7 +129,7 @@ assertion(function($array){
     if (is_array($array)) return true;
     return sprintf(
         '%s is not an array',
-        gettype($array)
+        \prggmrunit\Output::variable($array)
     );
 }, 'array');
 
@@ -142,7 +142,7 @@ assertion(function($string){
     if (is_string($string)) return true;
     return sprintf(
         '%s is not a string',
-        gettype($string)
+        \prggmrunit\Output::variable($string)
     );
 }, 'string');
 
@@ -155,7 +155,7 @@ assertion(function($int){
     if (is_int($int)) return true;
     return sprintf(
         '%s is not an integer',
-        gettype($int)
+        \prggmrunit\Output::variable($int)
     );
 }, 'integer');
 
@@ -168,7 +168,7 @@ assertion(function($float){
     if(is_float($float)) return true;
     return sprintf(
         'Failed asserting %s is a float',
-        gettype($float)
+        \prggmrunit\Output::variable($float)
     );
 }, 'float');
 
@@ -181,7 +181,7 @@ assertion(function($object){
     if (is_object($object)) return true;
     return sprintf(
         '%s is not an object',
-        gettype($object)
+        \prggmrunit\Output::variable($object)
     );
 }, 'object');
 
@@ -194,7 +194,7 @@ assertion(function($object, $class){
     if (get_class($class) === $object) return true;
     return sprintf(
         '%s is not an instance of %s',
-        get_class($class),
-        $object
+        \prggmrunit\Output::variable($class),
+        \prggmrunit\Output::variable($object)
     );
 }, 'instanceof');
