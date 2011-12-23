@@ -47,6 +47,7 @@ if (!version_compare(\prggmr::version(), '0.2.0', '<=')) {
 
 require $prggmrunitpath.'/engine.php';
 require $prggmrunitpath.'/events.php';
+require $prggmrunitpath.'/assertions.php';
 require $prggmrunitpath.'/test.php';
 require $prggmrunitpath.'/suite.php';
 require $prggmrunitpath.'/api.php';

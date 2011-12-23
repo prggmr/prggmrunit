@@ -23,7 +23,7 @@
 /**
  * PHPUnit Emulation
  */
-once(function($event, $argv){
+prggmrunit::instance()->subscribe(function($event, $argv){
     
     /**
      * PHPUnit works as follows
@@ -48,7 +48,7 @@ once(function($event, $argv){
         }
         
         // phpunit Test Test.php
-        if ($argv[$i].'.php' == $argv[$i+1]) {
+        if (isset($argv[$i+1]) && $argv[$i].'.php' == $argv[$i+1]) {
             $class = $argv[$i];
             $i++;
             $file = $argv[$i];
@@ -107,6 +107,7 @@ class PHPUnit_Framework_TestCase extends \prggmrunit\emulator\Test {
      */ 
     public function __construct($name = null, $data = null)
     {
+        parent::__construct(prggmrunit::instance()->getAssertions());
         $ref = new \ReflectionClass($this);
         // hopefully php fixes this soon
         $class = $this;
@@ -118,10 +119,9 @@ class PHPUnit_Framework_TestCase extends \prggmrunit\emulator\Test {
                 $suite->setUp(array($class, 'setUp'));
             }
             foreach ($ref->getMethods() as $_method) {
-                test(array($class, $_method->getName()));
+                test(array($class, $_method->getName()), $_method->getName(), 1, $class);
             }
-        }, $name);
-        
+        }, $ref->getName());
     }
 }
 

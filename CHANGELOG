@@ -1,3 +1,19 @@
+v0.2.2 ( Dec 22, 2011 )
+-----------------------------------
+- Removed Emulator 'assert' method
+- Emulator Tests now handle assertion tests instead of Emulator
+- Test __call now directly calls the _assert method
+- Added _assert method to the Test object
+- Assertions closures are now sent the Test which trigged the assertion
+  as the first parameter.
+- Moved standard assertions to assertions/standard.php file
+- Added setAssertions and getAssertions method to prggmrunit Engine class
+- Emulator EMULATION_LOAD signal is now fired within the prggmrunit Engine
+- Emulator now uses the Assertions object for assertions
+- Removed circular object reference in the Test object
+- Assertions are now handled by the Assertions class
+- Added Assertions Object
+
 v0.2.1 ( Dec 20, 2011 )
 -----------------------------------
 - Test messages can now be set using addTestMessage

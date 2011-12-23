@@ -106,7 +106,7 @@ class CLI extends unit\Output {
             $suites   = array();
             foreach ($tests as $_index => $_test) {
                 $testsC++;
-                if ($_test->getSuite() === null) {
+                if ($_test->getSuite() === false) {
                     switch ($_test->getTestResult()) {
                         case \prggmrunit\Test::FAIL:
                             $messages = $_test->getTestMessages();
@@ -125,7 +125,7 @@ class CLI extends unit\Output {
                     $assertionS += $_test->skippedAssertions();
                     $assertionC += $_test->assertionCount();
                 } else {
-                    $hash = spl_object_hash($_test->getSuite());
+                    $hash = spl_object_hash($_test);
                     if (!isset($suites[$hash])) {
                         $suites[$hash] = $_test;
                     }

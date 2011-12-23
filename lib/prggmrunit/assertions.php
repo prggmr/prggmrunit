@@ -1,4 +1,5 @@
 <?php
+namespace prggmrunit;
 /**
  *  Copyright 2010-11 Nickolas Whiting
  *
@@ -21,180 +22,67 @@
  */
 
 /**
- * Default assertions
- *
- * The following assertions are the default avaliable assertions, they 
- * are automatically registered in the prggmrunit global scope.
+ * Assertion tests
  */
+class Assertions {
 
-/**
- * Equals assertion.
- *
- * Asserts that two values are exactly equal.
- */
-assertion(function($expect, $actual){
-    if ($expect === $actual) return true;
-    return sprintf(
-        "%s does not equal %s",
-        \prggmrunit\Output::variable($actual, true),
-        \prggmrunit\Output::variable($expect, true)
-    );
-}, 'equal');
+    /**
+     * Default assertion namespace
+     */
+     const PRGGMRUNIT = 1;
 
-/**
- * Event assertion.
- *
- * Asserts that the getData result associated after the event fire
- * equals what is contained in the resulting event.
- */
-assertion(function($signal, $expected, $params = null, $event = null, $engine = null){
-    if (null !== $engine) {
-        $fire = $engine->fire($signal, $params, $event);
-    } else {
-        $fire = \prggmr::instance()->fire($signal, $params, $event);
-    }
-    if ($fire->getData() === $expected) return true;
+    /**
+     * Array of avaliable assertion tests.
+     *
+     * @var  array
+     */
+    protected $_assertions = array();
     
-    return sprintf(
-        "Event data %s does not equal %s",
-        \prggmrunit\Output::variable($fire->getData()),
-        \prggmrunit\Output::variable($expected)
-    );
-}, 'event');
-
-/**
- * Exception assertion.
- *
- * Asserts that the giving code throws the giving Exception.
- */
-assertion(function($exception, $code){
-    try {
-        $code();
-    } catch (\Exception $e) {
-        if (get_class($e) !== $exception) return sprintf(
-            'Exception %s was thrown expected %s',
-            get_class($e),
-            $exception
-        );
-        return true;
+    /**
+     * Adds a new assertion test to run within a unit test.
+     *
+     * @param  object  $closure  Callable php function
+     * @param  string  $name  Test name
+     * @param  integer $namespace  Namespace this assertions belongs
+     *
+     * @throws  InvalidArgumentException
+     * 
+     * @return  void
+     */
+    public function assertion($closure, $name, $namespace = null)
+    {
+        if (null === $namespace) {
+            $namespace = self::PRGGMRUNIT;
+        }   
+        if (!is_string($name)) {
+            throw new \InvalidArgumentException(
+                'assertion name must be a string'
+            );
+        }
+        if (!isset($this->_assertions[$namespace])) {
+            $this->_assertions[$namespace] = array();
+        }
+        $this->_assertions[$namespace][$name] = $closure;
     }
-    return 'Exception was not thrown';
-}, 'exception');
-
-/**
- * True assertion.
- *
- * Asserts the provided expression results to true.
- */
-assertion(function($var){
-    if ($var === true) return true;
-    return sprintf(
-        '%s does not equal true',
-        \prggmrunit\Output::variable($var)
-    );
-}, 'true');
-
-/**
- * False assertion.
- *
- * Asserts the provided expressions results to false.
- */
-assertion(function($var){
-    if ($var === false) return true;
-    return sprintf(
-        '%s does not equal false',
-        \prggmrunit\Output::variable($var)
-    );
-}, 'false');
-
-/**
- * Null assertion
- *
- * Asserts the given expression results to null.
- */
-assertion(function($var){
-    if ($var === null) return true;
-    return sprintf(
-        '%s equal null',
-        \prggmrunit\Output::variable($var)
-    );
-}, 'null');
-
-/**
- * Array assertion
- *
- * Asserts the given variable is an array.
- */
-assertion(function($array){
-    if (is_array($array)) return true;
-    return sprintf(
-        '%s is not an array',
-        \prggmrunit\Output::variable($array)
-    );
-}, 'array');
-
-/**
- * String assertion
- *
- * Asserts the given variable is a string.
- */
-assertion(function($string){
-    if (is_string($string)) return true;
-    return sprintf(
-        '%s is not a string',
-        \prggmrunit\Output::variable($string)
-    );
-}, 'string');
-
-/**
- * Integer assertion
- *
- * Asserts the given variable is a integer.
- */
-assertion(function($int){
-    if (is_int($int)) return true;
-    return sprintf(
-        '%s is not an integer',
-        \prggmrunit\Output::variable($int)
-    );
-}, 'integer');
-
-/**
- * Float assertion
- *
- * Asserts the given variable is a float.
- */
-assertion(function($float){
-    if(is_float($float)) return true;
-    return sprintf(
-        'Failed asserting %s is a float',
-        \prggmrunit\Output::variable($float)
-    );
-}, 'float');
-
-/**
- * Object assertion
- *
- * Asserts the given variable is an object.
- */
-assertion(function($object){
-    if (is_object($object)) return true;
-    return sprintf(
-        '%s is not an object',
-        \prggmrunit\Output::variable($object)
-    );
-}, 'object');
-
-/**
- * Instanceof assertion
- *
- * Asserts the given object is an instance of the provided class.
- */
-assertion(function($object, $class){
-    if (get_class($class) === $object) return true;
-    return sprintf(
-        '%s is not an instance of %s',
-        \prggmrunit\Output::variable($class),
-        \prggmrunit\Output::variable($object)
-    );
-}, 'instanceof');
+    
+    /**
+     * Runs an assertion.
+     *
+     * @param  string  $assertion  Assertion test
+     * @param  array  $params  Parameters
+     * @param  integer $namespace  Namespace this assertions belongs
+     * 
+     * @return  boolean
+     */
+    public function assert($name, $params, $namespace = null)
+    {
+        if (null === $namespace) {
+            $namespace = self::PRGGMRUNIT;
+        } 
+        if (isset($this->_assertions[$namespace][$name])) {
+            return call_user_func_array($this->_assertions[$namespace][$name], $params);
+        } else {
+            return null;
+        }
+    }    
+}

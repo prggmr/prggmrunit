@@ -57,8 +57,8 @@ class Suite {
      */
     public function __construct($test, $engine)
     {
-        $this->_test = new Test($engine);
-        $this->_test->setSuite($this);
+        $this->_test = new Test($engine->getAssertions());
+        $this->_test->setSuite();
         $engine->suite($this);
         call_user_func_array($test, array($this));
         $engine->suite();

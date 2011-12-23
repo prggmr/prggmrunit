@@ -28,18 +28,18 @@ namespace prggmrunit;
 class Engine extends \prggmr\Engine {
     
     /**
-     * Array of avaliable assertion tests.
-     *
-     * @var  array
-     */
-    protected $_assertions = array();
-    
-    /**
      * Array of tests.
      *
      * @var  array
      */
     protected $_tests = array();
+    
+    /**
+     * Assertions object
+     * 
+     * @var  object
+     */
+     protected $_assertions = null;
     
     /**
      * Number of intervals set.
@@ -56,43 +56,6 @@ class Engine extends \prggmr\Engine {
     protected $_suite = null;
     
     /**
-     * Adds a new assertion test to run within a unit test.
-     *
-     * @param  object  $closure  Callable php function
-     * @param  string  $name  Test name
-     *
-     * @throws  InvalidArgumentException
-     * 
-     * @return  void
-     */
-    public function assertion($closure, $name)
-    {
-        if (!is_string($name)) {
-            throw new \InvalidArgumentException(
-                'assertion name must be a string'
-            );
-        }
-        $this->_assertion[$name] = $closure;
-    }
-    
-    /**
-     * Runs an assertion.
-     *
-     * @param  string  $assertion  Assertion test
-     * @param  array  $params  Parameters
-     * 
-     * @return  boolean
-     */
-    public function assert($name, $params)
-    {
-        if (isset($this->_assertion[$name])) {
-            return call_user_func_array($this->_assertion[$name], $params);
-        } else {
-            return null;
-        }
-    }
-    
-    /**
      * Adds a new unit test.
      *
      * @param  closure  $test  Test contained within a closure.
@@ -105,7 +68,7 @@ class Engine extends \prggmr\Engine {
     public function test($test, $name = null, $repeat = 1, $event = null)
     {
         if (null === $event || is_object($event) && !$event instanceof Test) {
-            $event = new Test($this);
+            $event = new Test($this->_assertions);
         }
         if (null !== $this->_suite) {
             $test = new \prggmr\Subscription($test, $name, $repeat);
@@ -228,4 +191,24 @@ class Engine extends \prggmr\Engine {
     {
         return $this->_suite;
     }
+    
+    /**
+     * Sets the assertion object.
+     * 
+     * @param  object  $assertion  \prggmrunit\Assertions
+     */
+     public function setAssertions($assertions)
+     {
+         $this->_assertions = $assertions;
+     }
+     
+     /**
+      * Returns the assertion object.
+      * 
+      * @return  object  \prggmrunit\Assertions
+      */
+      public function getAssertions()
+      {
+          return $this->_assertions;
+      }
 }

@@ -101,5 +101,5 @@ function teardown($function) {
  * @return  void
  */
 function assertion($function, $name) {
-    return prggmrunit::instance()->assertion($function, $name);
+    return prggmrunit::instance()->getAssertions()->assertion($function, $name);
 }

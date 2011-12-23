@@ -155,7 +155,6 @@ if (!defined('PRGGMRUNIT_LIGHTWEIGHT') || defined('PRGGMRUNIT_EMULATION_DEBUG'))
 // INCLUDE LIBRARY
 $prcwd = dirname(realpath(__FILE__));
 require_once $prcwd.'/../lib/prggmrunit/prggmrunit.php';
-require_once $prcwd.'/../lib/prggmrunit/assertions.php';
 
 //VERSION CHECK
 if (isset($showversion)) {
@@ -199,6 +198,11 @@ if (isset($output)) {
     \prggmrunit\Output::initalize(null, $outputbuffer);
 }
 
+// ASSERTIONS
+prggmrunit::instance()->setAssertions(new \prggmrunit\Assertions());
+require_once $prcwd.'/../lib/prggmrunit/assertions/standard.php';
+
+
 // PRGGMRUNIT EXCEPTION HANDLER
 if (PRGGMR_EVENTED_EXCEPTIONS === true) {
     subscribe(function($event, $exception){
@@ -239,7 +243,10 @@ if (isset($emulate)) {
             implode("\n", \prggmrunit\Emulator::getEmulators())
         ), \prggmrunit\Output::ERROR);
     } else {
-        if (\prggmrunit\Emulator::emulate($emulate, $argv)) {
+        try {
+            \prggmrunit\Emulator::emulate(
+                $emulate, $argv, prggmrunit::instance()->getAssertions()
+            );
             \prggmrunit\Output::send(sprintf(
                 "Running in emulation mode, emulating (%s)%s",
                 $emulate, PHP_EOL
@@ -250,10 +257,13 @@ if (isset($emulate)) {
                     "EMULATION DEBUG MODE TURNED ON (Have fun)".PHP_EOL
                 , \prggmrunit\Output::DEBUG);
             }
-        } else {
+        } catch (Exception $e) {
             \prggmrunit\Output::send(sprintf(
-                "Failed to load emulator (%s)",
-                $emulate
+                "Failed to load emulator (%s).%s%s%s",
+                $emulate,
+                PHP_EOL,
+                $e->getMessage(),
+                PHP_EOL
             ), \prggmrunit\Output::ERROR);
         }
     }

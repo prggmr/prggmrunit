@@ -84,11 +84,11 @@ class Test extends \prggmr\Event {
     protected $_skippedAssertions = array();
     
     /**
-     * Reference to the engine running this test.
+     * Reference to the assertions avaliable to a test.
      *
      * @var  object
      */
-    protected $_engine = null;
+    protected $_assertions = null;
 
     /**
      * Reference to the suite this test belongs.
@@ -114,11 +114,11 @@ class Test extends \prggmr\Event {
     /**
      * Constructs a new test event.
      *
-     * @param  object  $engine  \prggmrunit\Engine
+     * @param  object  $engine  \prggmrunit\Assertions
      */
-    public function __construct($engine)
+    public function __construct($assertions)
     {
-        $this->_engine = $engine;
+        $this->_assertions = $assertions;
         // by default all tests are passed
         $this->setTestResult(self::PASS);
     }
@@ -152,34 +152,57 @@ class Test extends \prggmr\Event {
      */
     public function __call($name, $args = null)
     {
+         return $this->_assert($name, $args, null, debug_backtrace());
+    }
+    
+    /**
+     * Runs an assertion test.
+     *
+     * @param  string  $name  Assertion test.
+     * @param  array  $args  Arguments to pass to test.
+     * @param  string  $namespace  Namespace assertion belongs.
+     * @param  array  $backtrace  Backtrace of the assertion.
+     *
+     * @return  boolean
+     */
+    protected function _assert($name, $args = null, $namespace = null, $backtrace = null) 
+    {
         $this->_assertionCount++;
         // skip if fail or skip state
         if ($this->getTestResult() === self::FAIL ||
             $this->getTestResult() === self::SKIP) {
             if ($this->getTestResult() === self::SKIP) {
-                $this->_engine->fire(Events::TEST_ASSERTION_SKIP);
+                \prggmrunit::instance()->fire(Events::TEST_ASSERTION_SKIP);
             }
             $this->_skippedAssertions[] = $name;
             $this->_assertionSkip++;
             return false;
         }
+        if (null === $args) {
+            $args = array($this);
+        } else {
+            if (!is_array($args)) {
+                $args = array($this, $args);
+            } else {
+                array_unshift($args, $this);
+            }
+        }
         try {
-            $result = $this->_engine->assert($name, $args);
+            $result = $this->_assertions->assert($name, $args, $namespace);
         } catch (\Exception $e) {
             $result = false;
         }
         if ($result !== true) {
             $this->_failedAssertions[] = $name;
-            $this->_engine->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
             $this->_assertionFail++;
             // if fail add the backtrace
-            $backtrace = debug_backtrace();
             $this->setTestResult(self::FAIL);
             $this->addTestMessage($result, $backtrace, Output::ERROR);
             return false;
         } else {
             $this->_passedAssertions[] = $name;
-            $this->_engine->fire(Events::TEST_ASSERTION_PASS);
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_PASS);
             $this->_assertionPass++;
             return true;
         }
@@ -309,13 +332,13 @@ class Test extends \prggmr\Event {
     }
 
     /**
-     * Registers the suite this test belongs to.
+     * Registers if test belongs to a suite.
      *
      * @return  void
      */
-    public function setSuite($suite)
+    public function setSuite()
     {
-        $this->_suite = $suite;
+        $this->_suite = true;
     }
 
     /**

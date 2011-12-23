@@ -28,7 +28,7 @@ namespace prggmrunit;
  * for the given library, mirrors their assertion API and attempts to
  * gracefully degrade for unsupported features.
  */
-class Emulator {
+final class Emulator {
     
     /**
      * Emulators definitions
@@ -40,7 +40,7 @@ class Emulator {
      *
      * @var  array
      */
-    private static $_emulators = array(
+    protected static $_emulators = array(
         self::PHPUNIT => self::PHPUNIT
     );
     
@@ -49,14 +49,14 @@ class Emulator {
      *
      * @var  array
      */
-    private static $_activated = array();
+    protected static $_activated = array();
     
     /**
-     * Running list of emulator assertions.
+     * Assertion object
      *
-     * @var  array
+     * @var  object
      */
-    private static $_assertions = array();
+    protected static $_assertions = null;
     
     /**
      * no construction
@@ -68,19 +68,34 @@ class Emulator {
      *
      * @param  string  $framework  Framework to emulate.
      * @param  array  $argv  Test arguments array
+     * @param  object  $assertions  \prggmrunit\Assertions
      * 
      * @return  boolean
      */
-    public static function emulate($framework, $argv)
+    public static function emulate($framework, $argv, $assertions)
     {
         if (isset(static::$_emulators[$framework])) {
+            
             static::$_activated[] = $framework;
+            
+            if (null === $assertions || !is_object($assertions)) {
+                $assertions = new Assertions();
+            } elseif (!$assertions instanceof \prggmrunit\Assertions) {
+                throw new \InvalidArgumentException(sprintf(
+                    'Expected instance of \prggmrunit\Assertions received %s',
+                    get_class($assertions)
+                ));
+            }
+            
+            static::$_assertions = $assertions;
+
             require_once sprintf(
                 'emulator/%s.php',
                 $framework
             );
+            
             // tell the system to load the emulator
-            fire(\prggmrunit\Events::EMULATION_LOAD, array($argv));
+            \prggmrunit::instance()->fire(\prggmrunit\Events::EMULATION_LOAD, array($argv));
             
             if (defined('PRGGMRUNIT_EMULATION_DEBUG')) {
                 
@@ -113,7 +128,7 @@ class Emulator {
      *
      * @return  array
      */
-    public function activated(/* ... */)
+    public static function activated(/* ... */)
     {
         return static::$_activated;
     }
@@ -123,85 +138,18 @@ class Emulator {
      *
      * @param  object  $closure  Callable php function
      * @param  string  $name  Test name
-     * @param  mixed  $framework  Emulation framework
+     * @param  mixed  $namespace  Emulation namespace
      *
      * @return  void
      */
-    public static function assertion($closure, $name, $framework = null)
+    public static function assertion($closure, $name, $namespace = null)
     {
-        if (null === $framework) {
+        if (null === $namespace) {
             // use the last activated emulator
-            $framework = end(static::$_activated);
+            $namespace = end(static::$_activated);
         }
-        if (!isset(static::$_assertions[$framework])) {
-            static::$_assertions[$framework] = array();
-        }
-        static::$_assertions[$framework][$name] = $closure;
-    }
-    
-    /**
-     * Runs an assertion.
-     *
-     * @param  string  $assertion  Assertion test
-     * @param  array  $params  Parameters
-     * @param  mixed  $framework  Emulation framework
-     * 
-     * @return  boolean
-     */
-    public static function assert($name, $params, $framework = null)
-    {
-        if (null === $framework) {
-            $framework = end($framework);
-        }
-        $result = null;
-        if (isset(static::$_assertions[$framework][$name])) {
-            $result = call_user_func_array(
-                static::$_assertions[$framework][$name], $params
-            );
-            Output::variable($result);
-        }
-        
-        // fun
-        if (defined('PRGGMRUNIT_EMULATION_DEBUG')) {
-            Output::send(sprintf(
-                'Ran assertion (%s) results (%s)%s',
-                $name,
-                ($result === true) ? 'pass' : ($result === false) ? 'fail' : 'assertion not avaliable',
-                PHP_EOL
-            ));
-            if ($result !== true) {
-                // everything fails here
-                if ($result === null) {
-                    Output::send(sprintf(
-                        "Emulation framework %s assertion %s does not exist.%s",
-                        Output::variable($framework), Output::variable($name), PHP_EOL
-                    ), Output::DEBUG);
-                    Output::send(sprintf(
-                        "Avaliable emulation assertions %s%s%s",
-                        PHP_EOL,
-                        implode(PHP_EOL, array_keys(static::$_assertions[$framework])),
-                        PHP_EOL
-                    ), Output::DEBUG);
-                } else {
-                    Output::send(sprintf(
-                        "Emulation Assertion %s::%s failed.%s",
-                        $framework,
-                        $name,
-                        PHP_EOL,
-                        PHP_EOL
-                    ), Output::DEBUG);
-                }
-                Output::send(sprintf(
-                    "Params%s%s%s",
-                    PHP_EOL,
-                    Output::variable($params),
-                    PHP_EOL
-                ), Output::DEBUG);
-                Output::backtrace(debug_backtrace());
-            }
-        }
-        
-        return $result;
+
+        static::$_assertions->assertion($closure, $name, $namespace);
     }
     
     /**

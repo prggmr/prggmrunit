@@ -58,46 +58,47 @@ class Test extends \prggmrunit\Test {
      */
     public function __call($name, $args = null)
     {
-        
-        /**
-         * this has some duplicate code ... this needs to be addressed
-         */
-        
-        $this->_assertionCount++;
-        // skip if fail or skip state
-        if ($this->getState() === self::FAIL ||
-            $this->getState() === self::SKIP) {
-            if ($this->getState() === self::SKIP) {
-                $this->_engine->fire(Events::TEST_ASSERTION_SKIP);
+        $result = $this->_assert($name, $args, $this->_framework);
+
+        if (defined('PRGGMRUNIT_EMULATION_DEBUG')) {
+            \prggmrunit\Output::send(sprintf(
+                'Ran assertion %s results (%s)%s',
+                \prggmrunit\Output::variable($name),
+                ($result === true) ? 'pass' : ($result === false) ? 'fail' : 'assertion not avaliable',
+                PHP_EOL
+            ));
+            if ($result !== true) {
+                // everything fails here
+                if ($result === null) {
+                     \prggmrunit\Output::send(sprintf(
+                        "Emulation framework %s assertion %s does not exist.%s",
+                         \prggmrunit\Output::variable($this->_framework), Output::variable($name), PHP_EOL
+                    ),  \prggmrunit\Output::DEBUG);
+                     \prggmrunit\Output::send(sprintf(
+                        "Avaliable emulation assertions %s%s%s",
+                        PHP_EOL,
+                        implode(PHP_EOL, array_keys(static::$_assertions[$framework])),
+                        PHP_EOL
+                    ),  \prggmrunit\Output::DEBUG);
+                } else {
+                     \prggmrunit\Output::send(sprintf(
+                        "Emulation Assertion %s::%s failed.%s",
+                        $this->_framework,
+                        \prggmrunit\Output::variable($name),
+                        PHP_EOL,
+                        PHP_EOL
+                    ),  \prggmrunit\Output::DEBUG);
+                }
+                 \prggmrunit\Output::send(sprintf(
+                    "Params%s%s%s",
+                    PHP_EOL,
+                     \prggmrunit\Output::variable($args),
+                    PHP_EOL
+                ),  \prggmrunit\Output::DEBUG);
+                 \prggmrunit\Output::backtrace(debug_backtrace());
             }
-            $this->_assertionSkip++;
-            return false;
         }
-        try {
-            $result = \prggmrunit\Emulator::assert(
-                $name, $args, $this->getFramework()
-            );
-        } catch (\Exception $e) {
-            $result = false;
-        }
-        if ($result !== true) {
-            $this->_failedAssertions[] = $name;
-            \prggmrunit::instance()->fire(
-                \prggmrunit\Events::TEST_ASSERTION_FAIL,
-                array($this, $result)
-            );
-            $this->_assertionFail++;
-            // if fail add the backtrace to state message
-            $backtrace = debug_backtrace();
-            $this->setState(self::FAIL, array($result, $backtrace));
-            return false;
-        } else {
-            $this->_passedAssertions[] = $name;
-            \prggmrunit::instance()->fire(
-                \prggmrunit\Events::TEST_ASSERTION_PASS
-            );
-            $this->_assertionPass++;
-            return true;
-        }
+        
+        return $result;
     }
 }
