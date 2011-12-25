@@ -1,5 +1,6 @@
 v0.2.2 ( Dec 22, 2011 )
 -----------------------------------
+- Calls to unknown assertion functions now generate an error
 - Removed Emulator 'assert' method
 - Emulator Tests now handle assertion tests instead of Emulator
 - Test __call now directly calls the _assert method

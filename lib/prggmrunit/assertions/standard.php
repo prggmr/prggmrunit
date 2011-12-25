@@ -28,18 +28,30 @@
  */
 
 /**
- * Equals assertion.
+ * Case sensitive equals assertion.
  *
  * Asserts that two values are exactly equal.
  */
 assertion(function($test, $expect, $actual){
     if ($expect === $actual) return true;
     return sprintf(
-        "%s does not equal %s",
-        \prggmrunit\Output::variable($actual, true),
-        \prggmrunit\Output::variable($expect, true)
+        "%s does not exactly equal %s",
+        \prggmrunit\Output::variable($actual),
+        \prggmrunit\Output::variable($expect)
     );
 }, 'equal');
+
+/**
+ * Case insensitive equals assertion.
+ */
+assertion(function($test, $expect, $actual){
+    if ($expect == $actual) return true;
+    return sprintf(
+        '%s does not equal %s',
+        \prggmrunit\Output::variable($actual),
+        \prggmrunit\Output::variable($expect)
+    );
+}, 'iequal');
 
 /**
  * Event assertion.
@@ -51,7 +63,7 @@ assertion(function($test, $signal, $expected, $params = null, $event = null, $en
     if (null !== $engine) {
         $fire = $engine->fire($signal, $params, $event);
     } else {
-        $fire = \prggmr::instance()->fire($signal, $params, $event);
+        $fire = fire($signal, $params, $event);
     }
     if ($fire->getData() === $expected) return true;
     

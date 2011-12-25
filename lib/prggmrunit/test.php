@@ -152,7 +152,7 @@ class Test extends \prggmr\Event {
      */
     public function __call($name, $args = null)
     {
-         return $this->_assert($name, $args, null, debug_backtrace());
+         return $this->_assert($name, $args, null, debug_backtrace(false));
     }
     
     /**
@@ -190,6 +190,7 @@ class Test extends \prggmr\Event {
         try {
             $result = $this->_assertions->assert($name, $args, $namespace);
         } catch (\Exception $e) {
+            $this->addTestMessage('Exception Encountered', $e->getMessage(), Output::ERROR);
             $result = false;
         }
         if ($result !== true) {
@@ -198,7 +199,14 @@ class Test extends \prggmr\Event {
             $this->_assertionFail++;
             // if fail add the backtrace
             $this->setTestResult(self::FAIL);
-            $this->addTestMessage($result, $backtrace, Output::ERROR);
+            if (null === $result) {
+                $this->addTestMessage(sprintf(
+                    '%s is not a valid assertion',
+                    $name
+                ), $backtrace, Output::ERROR);
+            } else {
+                $this->addTestMessage($result, $backtrace, Output::ERROR);
+            }
             return false;
         } else {
             $this->_passedAssertions[] = $name;

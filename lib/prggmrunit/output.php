@@ -30,13 +30,6 @@ namespace prggmrunit;
 class Output implements Output_Generator {
     
     /**
-     * Reference to prggmrunit engine.
-     *
-     * @var  object
-     */
-    protected static $_prggmrunit = null;
-    
-    /**
      * Output generator
      *
      * @var  object
@@ -92,11 +85,10 @@ class Output implements Output_Generator {
         if (null === $generator) {
             $generator = static::$_default;
         }
-        static::$_prggmrunit = \prggmrunit::instance();
         if (is_bool($buffer)) {
             ob_start();
             static::$_outputbuffer = $buffer;
-            static::$_prggmrunit->subscribe(\prggmrunit\Events::END, function(){
+            \prggmrunit::instance()->subscribe(\prggmrunit\Events::END, function(){
                 ob_end_flush();
             }, 'Output buffer shutoff', 1000);
         }
@@ -180,13 +172,13 @@ class Output implements Output_Generator {
     {
         switch ($v) {
             case is_bool($v):
-            case $v === false:
                 if ($v) {
                     return "bool(true)";
                 }
                 return "bool(false)";
                 break;
             case is_null($v):
+                var_dump($v);
                 return "null";
                 break;
             case is_int($v):

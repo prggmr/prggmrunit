@@ -104,7 +104,7 @@ final class Emulator {
                 // Assertion Pass
                 \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_PASS, function($event){
                     $event->halt();
-                }, 'Debugging Halt Pas', 1);
+                }, 'Debugging Halt Pass', 1);
         
                 // Assertion Fail
                 \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_FAIL, function($event){

@@ -50,6 +50,13 @@ class Suite {
     protected $_test = null;
     
     /**
+     * Number of tests in the suite.
+     *
+     * @var  integer
+     */
+     protected $_testcount = 0;
+    
+    /**
      * Creates a new testing suite.
      *
      * @param  closure  $suite
@@ -100,4 +107,24 @@ class Suite {
         return $this->_test;
     }
     
+    /**
+     * Creates a new test in the suite.
+     * For now this only adds one to the test count.
+     *
+     * @return void
+     */
+     public function addTest()
+     {
+         $this->_testcount++;
+     }
+     
+     /**
+      * Returns the number of tests in the suite.
+      *
+      * @return  integer
+      */
+      public function getTestCount()
+      {
+          return $this->_testcount;
+      }
 }

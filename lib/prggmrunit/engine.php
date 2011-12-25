@@ -66,12 +66,22 @@ class Engine extends \prggmr\Engine {
      * @return  void
      */
     public function test($test, $name = null, $repeat = 1, $event = null)
-    {
-        if (null === $event || is_object($event) && !$event instanceof Test) {
-            $event = new Test($this->_assertions);
+    {    
+        if (!$test instanceof \prggmr\Subscription) {
+            if (is_callable($test)) {
+                $test = new \prggmr\Subscription(
+                    $test, $name, $repeat
+                );
+            } else {
+                throw new \InvalidArgumentException(
+                    'prggmrunit\Engine::test expects a closure
+                    or \prggmr\Subscription object'
+                );
+            }
         }
+        
         if (null !== $this->_suite) {
-            $test = new \prggmr\Subscription($test, $name, $repeat);
+            $this->_suite->addTest();
             $event = $this->_suite->test();
             if ($this->_suite->setUp() != null) {
                 $test->preFire($this->_suite->setUp());
@@ -79,20 +89,9 @@ class Engine extends \prggmr\Engine {
             if ($this->_suite->tearDown() != null) {
                 $test->postFire($this->_suite->tearDown());
             };
-        } else {
-            if (!$test instanceof \prggmr\Subscription) {
-                if (is_callable($test)) {
-                    $test = new \prggmr\Subscription(
-                        $test, $name, $repeat
-                    );
-                } else {
-                    throw new \InvalidArgumentException(
-                        'prggmrunit\Engine::test expects a closure
-                        or \prggmr\Subscription object'
-                    );
-                }
-            }
-        }
+        } elseif (null === $event || !$event instanceof Test) {
+            $event = new Test($this->_assertions);
+        } 
         
         $sub = $this->setTimeout(
             $test,

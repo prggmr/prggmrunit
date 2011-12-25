@@ -61,7 +61,7 @@ class CLI extends unit\Output {
         }
         
         // Testing beings
-        static::$_prggmrunit->subscribe(\prggmrunit\Events::START, function(){
+        \prggmrunit::instance()->subscribe(\prggmrunit\Events::START, function(){
             CLI::$start_time = \prggmrunit::instance()->getMilliseconds();
             CLI::send(sprintf(
                 "prggmrunit %s %s%s%s",
@@ -69,23 +69,25 @@ class CLI extends unit\Output {
             ));
         });
         
+        $break = 0;
+        
         // Assertion Pass
-        static::$_prggmrunit->subscribe(\prggmrunit\Events::TEST_ASSERTION_PASS, function(){
+        \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_PASS, function(){
             CLI::send(".");
         });
         
         // Assertion Fail
-        static::$_prggmrunit->subscribe(\prggmrunit\Events::TEST_ASSERTION_FAIL, function(){
+        \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_FAIL, function($event){
             CLI::send("F", CLI::ERROR);
         });
         
         // Assertion Skip
-        static::$_prggmrunit->subscribe(\prggmrunit\Events::TEST_ASSERTION_SKIP, function(){
+        \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_SKIP, function(){
             CLI::send("S", CLI::DEBUG);
         });
         
         // Testing is finished
-        static::$_prggmrunit->subscribe(\prggmrunit\Events::END, function($test){
+        \prggmrunit::instance()->subscribe(\prggmrunit\Events::END, function($test){
     
             $end_time = \prggmrunit::instance()->getMilliseconds();
             $tests = \prggmrunit::instance()->getTests();
@@ -106,7 +108,7 @@ class CLI extends unit\Output {
             $suites   = array();
             foreach ($tests as $_index => $_test) {
                 $testsC++;
-                if ($_test->getSuite() === false) {
+                if ($_test->getSuite() === null) {
                     switch ($_test->getTestResult()) {
                         case \prggmrunit\Test::FAIL:
                             $messages = $_test->getTestMessages();
@@ -145,6 +147,7 @@ class CLI extends unit\Output {
                         $testsS++;
                         break;
                 }
+                $testsC += $_suite->getTestCount();
                 $assertionF += $_suite->failedAssertions();
                 $assertionP += $_suite->passedAssertions();
                 $assertionS += $_suite->skippedAssertions();
@@ -201,8 +204,9 @@ class CLI extends unit\Output {
                 PHP_EOL, PHP_EOL
             ), CLI::DEBUG);
             CLI::send(sprintf(
-                "Ran %s tests in %s seconds and used %s%s%s",
+                "%s tests %s suites - %s seconds - %s%s%s",
                 $testsC,
+                count($suites),
                 $runtime,
                 $size(round(memory_get_peak_usage(true), 4)),
                 PHP_EOL, PHP_EOL
