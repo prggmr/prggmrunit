@@ -35,11 +35,18 @@ class Engine extends \prggmr\Engine {
     protected $_tests = array();
     
     /**
+     * Array of suites.
+     *
+     * @var  array 
+     */
+    protected $_suites = array();
+    
+    /**
      * Assertions object
      * 
      * @var  object
      */
-     protected $_assertions = null;
+    protected $_assertions = null;
     
     /**
      * Number of intervals set.
@@ -54,6 +61,13 @@ class Engine extends \prggmr\Engine {
      * @var  object
      */
     protected $_suite = null;
+    
+    /**
+     * End of test results
+     *
+     * @var  object
+     */
+    protected $_results = null;
     
     /**
      * Adds a new unit test.
@@ -125,8 +139,11 @@ class Engine extends \prggmr\Engine {
         }, 10, null, 'Killswitch');
         // START
         $this->fire(Events::START, $this);
+        $this->start_time = $this->getMilliseconds();
         // Start the loop
         $this->loop($reset, $timeout);
+        // DETERMAIN RESULTS
+        $this->_statResults();
         // END
         $this->fire(Events::END, $this);
     }
@@ -174,11 +191,14 @@ class Engine extends \prggmr\Engine {
      */
     public function suite(\prggmrunit\Suite $suite = null)
     {
+        // set as active
         if (null === $suite) {
             $this->_suite = null;
         } else {
             $this->_suite = $suite;
         }
+        // add to suites
+        $this->_suites[] = $suite;
     }
     
     /**
@@ -210,4 +230,35 @@ class Engine extends \prggmr\Engine {
       {
           return $this->_assertions;
       }
+      
+      /**
+       * Generates the results of testing run.
+       *
+       * @return  void
+       */
+       public function _statResults()
+       {
+           $this->_results = new \prggmrunit\Results($this);
+       }
+       
+       /**
+        * Returns the results object.
+        *
+        * @return  object  \prggmrunit\Results
+        */
+        public function getResults()
+        {
+            return $this->_results;
+        }
+        
+       /**
+        * Returns all suites.
+        *
+        * @return  array  
+        */
+        public function getSuites()
+        {
+            return $this->_suites;
+        }
+          
 }

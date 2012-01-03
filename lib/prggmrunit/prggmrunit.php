@@ -54,6 +54,7 @@ require $prggmrunitpath.'/api.php';
 require $prggmrunitpath.'/output.php';
 require $prggmrunitpath.'/emulator.php';
 require $prggmrunitpath.'/emulator/test.php';
+require $prggmrunitpath.'/results.php';
 
 class prggmrunit extends \prggmrunit\Engine {
     

@@ -85,4 +85,18 @@ class Assertions {
             return null;
         }
     }    
+    
+    
+    /**
+     * Returns the currently avaliable assertions.
+     *
+     * @return  array
+     */
+    public function getAssertions($namespace = null)
+    {
+        if (null === $namespace) {
+            $namespace = self::PRGGMRUNIT;
+        }
+        return array_keys($this->_assertions[$namespace]);
+    }
 }

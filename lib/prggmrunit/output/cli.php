@@ -36,15 +36,6 @@ class CLI extends unit\Output {
     static protected $_colors = false;
     
     /**
-     * Lets keep track of some things.
-     *
-     * @var  int
-     */
-    static public $start_time = null;
-    static public $end_time = null;
-    static public $echo_c = 0;
-    
-    /**
      * Compiles the CLI output generator.
      *
      * Setup colors, our startup events, assertion printouts and end action.
@@ -62,126 +53,82 @@ class CLI extends unit\Output {
         
         // Testing beings
         \prggmrunit::instance()->subscribe(\prggmrunit\Events::START, function(){
-            CLI::$start_time = \prggmrunit::instance()->getMilliseconds();
             CLI::send(sprintf(
                 "prggmrunit %s %s%s%s",
                 PRGGMRUNIT_VERSION, PRGGMRUNIT_MASTERMIND, PHP_EOL, PHP_EOL
             ));
         });
-        
-        $break = 0;
-        
+                
         // Assertion Pass
-        \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_PASS, function(){
-            CLI::send(".");
+        \prggmrunit::instance()->subscribe(
+            \prggmrunit\Events::TEST_ASSERTION_PASS, function(){
+                CLI::send(".");
         });
         
         // Assertion Fail
-        \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_FAIL, function($event){
-            CLI::send("F", CLI::ERROR);
+        \prggmrunit::instance()->subscribe(
+            \prggmrunit\Events::TEST_ASSERTION_FAIL, function(){
+                CLI::send("F");
         });
         
         // Assertion Skip
-        \prggmrunit::instance()->subscribe(\prggmrunit\Events::TEST_ASSERTION_SKIP, function(){
-            CLI::send("S", CLI::DEBUG);
+        \prggmrunit::instance()->subscribe(
+            \prggmrunit\Events::TEST_ASSERTION_SKIP, function(){
+                CLI::send("S");
+        });
+        
+        /**
+         * Provide a line break every 60 assertions.
+         */
+         $break = 0;
+        \prggmrunit::instance()->subscribe(new \prggmr\ArrayContainsSignal(array(
+            \prggmrunit\Events::TEST_ASSERTION_PASS,
+            \prggmrunit\Events::TEST_ASSERTION_FAIL,
+            \prggmrunit\Events::TEST_ASSERTION_SKIP
+        )), function($event) use (&$break){
+                $break++;
+                if ($break == 60) {
+                    $break = 0;
+                    CLI::send(" [ 60 ]");
+                    CLI::send(PHP_EOL);
+                }
         });
         
         // Testing is finished
-        \prggmrunit::instance()->subscribe(\prggmrunit\Events::END, function($test){
-    
-            $end_time = \prggmrunit::instance()->getMilliseconds();
-            $tests = \prggmrunit::instance()->getTests();
-            // testing totals
-            $testsP = 0;
-            $assertionP = 0;
-            $testsF = 0;
-            $assertionF = 0;
-            $testsS = 0;
-            $assertionS = 0;
-            $testsC = 0;
-            $assertionC = 0;
+        \prggmrunit::instance()->subscribe(\prggmrunit\Events::END, function($event, $engine){
             
-            $failures = array();
-            // suites are keep track of and assertions are counted
-            // after running through all tests otherwise the assertion count
-            // is multiplied by the number of tests run in a suite
-            $suites   = array();
-            foreach ($tests as $_index => $_test) {
-                $testsC++;
-                if ($_test->getSuite() === null) {
-                    switch ($_test->getTestResult()) {
-                        case \prggmrunit\Test::FAIL:
-                            $messages = $_test->getTestMessages();
-                            $failures[] = $messages[\prggmrunit\Output::ERROR];
-                            $testsF++;
-                            break;
-                        case \prggmrunit\Test::PASS:
-                            $testsP++;
-                            break;
-                        case \prggmrunit\Test::SKIP:
-                            $testsS++;
-                            break;
-                    }
-                    $assertionF = $assertionF + $_test->failedAssertions();
-                    $assertionP = $assertionP + $_test->passedAssertions();
-                    $assertionS += $_test->skippedAssertions();
-                    $assertionC += $_test->assertionCount();
-                } else {
-                    $hash = spl_object_hash($_test);
-                    if (!isset($suites[$hash])) {
-                        $suites[$hash] = $_test;
-                    }
-                }
-            }
-            foreach ($suites as $_suite) {
-                switch ($_suite->getTestResult()) {
-                    case \prggmrunit\Test::FAIL:
-                        $messages = $_suite->getTestMessages();
-                        $failures[] = $messages[\prggmrunit\Output::ERROR];
-                        $testsF++;
-                        break;
-                    case \prggmrunit\Test::PASS:
-                        $testsP++;
-                        break;
-                    case \prggmrunit\Test::SKIP:
-                        $testsS++;
-                        break;
-                }
-                $testsC += $_suite->getTestCount();
-                $assertionF += $_suite->failedAssertions();
-                $assertionP += $_suite->passedAssertions();
-                $assertionS += $_suite->skippedAssertions();
-                $assertionC += $_suite->assertionCount();
-            }
-            $runtime = round(($end_time - CLI::$start_time) / 1000, 4);
-            if (0 != count($failures)) {
+            $results = $engine->getResults();
+            
+            if (0 != count($results->getMessages())) {
                 CLI::send(sprintf(
                     "%s%s====================================================",
                     PHP_EOL, PHP_EOL
-                ), CLI::ERROR);
+                ), CLI::DEBUG);
                 CLI::send(sprintf(
-                    "%sFailures Detected%s",
+                    "%sTesting Messages%s",
                     PHP_EOL,
                     PHP_EOL
-                ), CLI::ERROR);
-                foreach ($failures as $_failure) {
-                    foreach ($_failure as $_k => $_fail) {
-                        CLI::send(sprintf(
-                            "%s--------------------------------------------%s",
-                            PHP_EOL, PHP_EOL
-                        ), CLI::ERROR);
-                        CLI::send(sprintf(
-                            "File : %s %s",
-                            $_fail['data'][0]['file'],
-                            PHP_EOL
-                        ), CLI::ERROR);
-                        CLI::send(sprintf(
-                            "Line : %s%sMessage : %s%s%s",
-                            $_fail['data'][0]['line'],
-                            PHP_EOL,
-                            $_fail['message'],
-                            PHP_EOL, PHP_EOL
-                        ), CLI::ERROR);
+                ), CLI::DEBUG);
+                foreach ($results->getMessages() as $_type => $_messages) {
+                    foreach ($_messages as $_message) {
+                        foreach ($_message as $_fail) {
+                            CLI::send(sprintf(
+                                "%s--------------------------------------------%s",
+                                PHP_EOL, PHP_EOL
+                            ), $_type);
+                            CLI::send(sprintf(
+                                "File : %s %s",
+                                $_fail['data'][0]['file'],
+                                PHP_EOL
+                            ), $_type);
+                            CLI::send(sprintf(
+                                "Line : %s%sMessage : %s%s%s",
+                                $_fail['data'][0]['line'],
+                                PHP_EOL,
+                                $_fail['message'],
+                                PHP_EOL, PHP_EOL
+                            ), $_type);
+                        }
                     }
                 }
             }
@@ -198,6 +145,7 @@ class CLI extends unit\Output {
                     $size/pow(1024, ($i = floor(log($size, 1024)))), 2
                 ) . $filesizename[$i] : '0 Bytes';
             };
+
             
             CLI::send(sprintf(
                 "%s===================================================%s",
@@ -205,27 +153,34 @@ class CLI extends unit\Output {
             ), CLI::DEBUG);
             CLI::send(sprintf(
                 "%s tests %s suites - %s seconds - %s%s%s",
-                $testsC,
-                count($suites),
-                $runtime,
-                $size(round(memory_get_peak_usage(true), 4)),
+                $results->getTestsTotal(),
+                $results->getSuitesTotal(),
+                $results->getRuntime(),
+                $size($results->getMemoryUsage(), 4),
                 PHP_EOL, PHP_EOL
             ), CLI::DEBUG);
-            if ($testsF != 0) {
+            if ($results->getFailedTests() != 0) {
                 CLI::send(sprintf(
                     "FAIL (failures=%s, success=%s, skipped=%s)",
-                    $testsF, $testsP, $testsS
+                    $results->getFailedTests(), 
+                    $results->getPassedTests(), 
+                    $results->getSkippedTests()
                 ), CLI::ERROR);
             } else {
                 CLI::send(sprintf(
                     "PASS (success=%s, skipped=%s)",
-                    $testsP,
-                    $testsS
+                    $results->getPassedTests(), 
+                    $results->getSkippedTests()
                 ));
             }
             CLI::send(sprintf(
                 "%sAssertions (pass=%s, fail=%s, skip=%s)%s",
-                PHP_EOL, $assertionP, $assertionF, $assertionS, PHP_EOL
+                PHP_EOL, 
+                $results->getPassedAssertions(), 
+                $results->getFailedAssertions(), 
+                $results->getSkippedAssertions()
+                ,
+                PHP_EOL
             ));
         }, "CLI Test Output");
     }

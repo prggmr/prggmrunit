@@ -178,7 +178,9 @@ class Output implements Output_Generator {
                 return "bool(false)";
                 break;
             case is_null($v):
-                var_dump($v);
+                if (false === $v) {
+                    return "bool(false)";
+                }
                 return "null";
                 break;
             case is_int($v):

@@ -1,6 +1,17 @@
-v0.2.2 ( Dec 22, 2011 )
+v0.2.2 ( January 3rd, 2012 )
 -----------------------------------
-- Calls to unknown assertion functions now generate an error
+- Test messages are no longer considered failures only and are
+  displayed if any messages exist in the Results object
+- Debug backtraces have removed variables to conserve memory.
+- Output::variable method now properly displays false booleans.
+- A line break is now done every 60 assertions.
+- CLI Ouput now uses the Results object for generating the final test
+  output.
+- Added Results class
+- Added Tests:getTestResult method
+- Added Assertions::getAssertions method
+- Calls to unknown assertion functions now generate a message and provide
+  a possible related assertion is found.
 - Removed Emulator 'assert' method
 - Emulator Tests now handle assertion tests instead of Emulator
 - Test __call now directly calls the _assert method

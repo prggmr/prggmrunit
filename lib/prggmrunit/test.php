@@ -171,9 +171,7 @@ class Test extends \prggmr\Event {
         // skip if fail or skip state
         if ($this->getTestResult() === self::FAIL ||
             $this->getTestResult() === self::SKIP) {
-            if ($this->getTestResult() === self::SKIP) {
-                \prggmrunit::instance()->fire(Events::TEST_ASSERTION_SKIP);
-            }
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_SKIP, array($name, $args, $namespace, $this));
             $this->_skippedAssertions[] = $name;
             $this->_assertionSkip++;
             return false;
@@ -193,24 +191,34 @@ class Test extends \prggmr\Event {
             $this->addTestMessage('Exception Encountered', $e->getMessage(), Output::ERROR);
             $result = false;
         }
-        if ($result !== true) {
+        if (null === $result) {
+            $suggestions = array_filter($this->_assertions->getAssertions($namespace), 
+                function($var) use ($name){
+                    if (\similar_text($var, $name) >= 5) return true;
+                    return false;
+                }
+            );
+            $this->addTestMessage(sprintf(
+                '%s is not a valid assertion%s',
+                $name,
+                (count($suggestions) > 0) ? ' maybe you wanted (' . implode(", ", $suggestions).')?' : 
+                ''
+            ), $backtrace, Output::DEBUG);
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_SKIP, array($name, $args, $namespace, $this));
+            $this->_skippedAssertions[] = $name;
+            $this->_assertionSkip++;
+            return false;
+        } elseif ($result !== true) {
             $this->_failedAssertions[] = $name;
-            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_FAIL, array($this, $result));
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_FAIL, array($name, $args, $namespace, $this));
             $this->_assertionFail++;
             // if fail add the backtrace
             $this->setTestResult(self::FAIL);
-            if (null === $result) {
-                $this->addTestMessage(sprintf(
-                    '%s is not a valid assertion',
-                    $name
-                ), $backtrace, Output::ERROR);
-            } else {
-                $this->addTestMessage($result, $backtrace, Output::ERROR);
-            }
+            $this->addTestMessage($result, $backtrace, Output::ERROR);
             return false;
         } else {
             $this->_passedAssertions[] = $name;
-            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_PASS);
+            \prggmrunit::instance()->fire(Events::TEST_ASSERTION_PASS, array($name, $args, $namespace, $this));
             $this->_assertionPass++;
             return true;
         }
