@@ -23,7 +23,7 @@
 
 
 // library version
-define('PRGGMRUNIT_VERSION', '0.2.0');
+define('PRGGMRUNIT_VERSION', '0.2.3');
 
 // The creator
 define('PRGGMRUNIT_MASTERMIND', 'Nickolas Whiting');

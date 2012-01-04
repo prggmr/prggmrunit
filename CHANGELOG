@@ -1,3 +1,10 @@
+v0.2.3 ( January 4th, 2012 )
+-----------------------------------
+- Added verbose level to CLI output
+- Added --verbose option to bin file
+- Modified CLI output colors
+- Modified CLI output message types for current messages
+
 v0.2.2 ( January 3rd, 2012 )
 -----------------------------------
 - Test messages are no longer considered failures only and are
