@@ -75,7 +75,7 @@ class CLI extends unit\Output {
                             '%s %s Passed with args %s',
                             $test->getSubscription()->getIdentifier(),
                             sprintf('%s\%s', $namespace, $assertion),
-                            \prggmrunit\Output::variable($args)
+                            \prggmrunit\Output::variable(array_slice($args, 1, count($args) - 1))
                         ), CLI::SYSTEM);
                         CLI::send(sprintf(
                             "%s--------------------------------------------%s",
@@ -106,7 +106,7 @@ class CLI extends unit\Output {
                             '%s %s Failed with args %s',
                             $test->getSubscription()->getIdentifier(),
                             sprintf('%s\%s', $namespace, $assertion),
-                            \prggmrunit\Output::variable($args)
+                            \prggmrunit\Output::variable(array_slice($args, 1, count($args) - 1))
                         ), CLI::ERROR);
                         CLI::send(sprintf(
                             "%s--------------------------------------------%s",
@@ -137,7 +137,7 @@ class CLI extends unit\Output {
                             '%s %s Skipped with args %s',
                             $test->getSubscription()->getIdentifier(),
                             sprintf('%s\%s', $namespace, $assertion),
-                            \prggmrunit\Output::variable($args)
+                            \prggmrunit\Output::variable(array_slice($args, 1, count($args) - 1))
                         ), CLI::DEBUG);
                         CLI::send(sprintf(
                             "%s--------------------------------------------%s",
