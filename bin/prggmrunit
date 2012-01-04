@@ -16,7 +16,8 @@ Options:
   -s/--sync     Sync all timer clocks with the loops clock on startup.
   -t/--time     Length of time to run in milliseconds.
   -v/--version  Display prggmrunit version.
-  
+ 
+  --verbose     Set the verbose level. (1,2,3) DEFAULT=1 
   --shortvars   Enable or disable shortened variable output. DEFAULT=1
   --vdepth      Depth to transverse variable outputs. DEFAULT=2
   --em-debug    For developing emulators
@@ -34,7 +35,7 @@ $options = getopt(
     'qwe:rt:yuio:pasdfghjklzxcvbnm',
     array(
         'buffer', 'help', 'output:', 'version', 'sync', 'time:', 'emulate:', 'shortvars::',
-        'vdepth:', 'colors', 'em-debug', 'light'
+        'vdepth:', 'colors', 'em-debug', 'light', 'verbose:'
     )
 );
 
@@ -123,6 +124,9 @@ foreach ($options as $_i => $_arg) {
         case 'light':
             define('PRGGMRUNIT_LIGHTWEIGHT', true);
             break;
+        case 'verbose':
+            $verbosity = $_arg;
+            break;
         default:
             exit(sprintf(
                     "invalid option '%s'\n%s",
@@ -196,6 +200,11 @@ if (isset($output)) {
     }
 } else {
     \prggmrunit\Output::initalize(null, $outputbuffer);
+}
+
+// VERBOSE LEVEL
+if (isset($verbosity)) {
+    \prggmrunit\output\CLI::$verbosity = $verbosity;
 }
 
 // ASSERTIONS

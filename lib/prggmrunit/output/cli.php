@@ -36,6 +36,13 @@ class CLI extends unit\Output {
     static protected $_colors = false;
     
     /**
+     * Verbose Level
+     * 
+     * @var  integer
+     */
+    static public $verbosity = 1;
+    
+    /**
      * Compiles the CLI output generator.
      *
      * Setup colors, our startup events, assertion printouts and end action.
@@ -56,25 +63,100 @@ class CLI extends unit\Output {
             CLI::send(sprintf(
                 "prggmrunit %s %s%s%s",
                 PRGGMRUNIT_VERSION, PRGGMRUNIT_MASTERMIND, PHP_EOL, PHP_EOL
-            ));
+            ), CLI::MESSAGE);
         });
                 
         // Assertion Pass
         \prggmrunit::instance()->subscribe(
-            \prggmrunit\Events::TEST_ASSERTION_PASS, function(){
-                CLI::send(".");
-        });
+            \prggmrunit\Events::TEST_ASSERTION_PASS, function($event, $assertion, $args, $namespace, $test){
+                switch (CLI::$verbosity) {
+                    case 3:
+                        CLI::send(sprintf(
+                            '%s %s Passed with args %s',
+                            $test->getSubscription()->getIdentifier(),
+                            sprintf('%s\%s', $namespace, $assertion),
+                            \prggmrunit\Output::variable($args)
+                        ), CLI::SYSTEM);
+                        CLI::send(sprintf(
+                            "%s--------------------------------------------%s",
+                            PHP_EOL, PHP_EOL
+                        ), CLI::SYSTEM);
+
+                        break;
+                    case 2:
+                        CLI::send(sprintf(
+                            "%s Passed%s",
+                            $assertion,
+                            PHP_EOL
+                        ), CLI::SYSTEM);
+                        break;
+                    default:
+                    case 1:
+                        CLI::send(".", CLI::SYSTEM);
+                        break;
+                }
+            });
         
         // Assertion Fail
         \prggmrunit::instance()->subscribe(
-            \prggmrunit\Events::TEST_ASSERTION_FAIL, function(){
-                CLI::send("F");
+            \prggmrunit\Events::TEST_ASSERTION_FAIL, function($test, $assertion, $args, $namespace, $test){
+                switch (CLI::$verbosity) {
+                    case 3:
+                        CLI::send(sprintf(
+                            '%s %s Failed with args %s',
+                            $test->getSubscription()->getIdentifier(),
+                            sprintf('%s\%s', $namespace, $assertion),
+                            \prggmrunit\Output::variable($args)
+                        ), CLI::ERROR);
+                        CLI::send(sprintf(
+                            "%s--------------------------------------------%s",
+                            PHP_EOL, PHP_EOL
+                        ), CLI::ERROR);
+
+                        break;
+                    case 2:
+                        CLI::send(sprintf(
+                            "%s Failed%s",
+                            $assertion,
+                            PHP_EOL
+                        ), CLI::ERROR);
+                        break;
+                    default:
+                    case 1:
+                        CLI::send("F", CLI::ERROR);
+                        break;
+                }
         });
         
         // Assertion Skip
         \prggmrunit::instance()->subscribe(
-            \prggmrunit\Events::TEST_ASSERTION_SKIP, function(){
-                CLI::send("S");
+            \prggmrunit\Events::TEST_ASSERTION_SKIP, function($test, $assertion, $args, $namespace, $test){
+                switch (CLI::$verbosity) {
+                    case 3:
+                        CLI::send(sprintf(
+                            '%s %s Skipped with args %s',
+                            $test->getSubscription()->getIdentifier(),
+                            sprintf('%s\%s', $namespace, $assertion),
+                            \prggmrunit\Output::variable($args)
+                        ), CLI::DEBUG);
+                        CLI::send(sprintf(
+                            "%s--------------------------------------------%s",
+                            PHP_EOL, PHP_EOL
+                        ), CLI::DEBUG);
+
+                        break;
+                    case 2:
+                        CLI::send(sprintf(
+                            "%s Skipped%s",
+                            $assertion,
+                            PHP_EOL
+                        ), CLI::DEBUG);
+                        break;
+                    default:
+                    case 1:
+                        CLI::send("S", CLI::DEBUG);
+                        break;
+                }
         });
         
         /**
@@ -89,8 +171,18 @@ class CLI extends unit\Output {
                 $break++;
                 if ($break == 60) {
                     $break = 0;
-                    CLI::send(" [ 60 ]");
-                    CLI::send(PHP_EOL);
+                    switch (static::$verbosity) {
+                        case 3:
+                        case 2:
+                            CLI::send("60 Assertions have ran", CLI::SYSTEM);
+                            CLI::send(PHP_EOL);
+                            break;
+                        case 1:
+                        default:
+                            CLI::send(" [ 60 ]", CLI::SYSTEM);
+                            CLI::send(PHP_EOL);
+                            break;
+                    }
                 }
         });
         
@@ -103,12 +195,12 @@ class CLI extends unit\Output {
                 CLI::send(sprintf(
                     "%s%s====================================================",
                     PHP_EOL, PHP_EOL
-                ), CLI::DEBUG);
+                ), CLI::MESSAGE);
                 CLI::send(sprintf(
                     "%sTesting Messages%s",
                     PHP_EOL,
                     PHP_EOL
-                ), CLI::DEBUG);
+                ), CLI::MESSAGE);
                 foreach ($results->getMessages() as $_type => $_messages) {
                     foreach ($_messages as $_message) {
                         foreach ($_message as $_fail) {
@@ -150,7 +242,7 @@ class CLI extends unit\Output {
             CLI::send(sprintf(
                 "%s===================================================%s",
                 PHP_EOL, PHP_EOL
-            ), CLI::DEBUG);
+            ), CLI::MESSAGE);
             CLI::send(sprintf(
                 "%s tests %s suites - %s seconds - %s%s%s",
                 $results->getTestsTotal(),
@@ -158,7 +250,7 @@ class CLI extends unit\Output {
                 $results->getRuntime(),
                 $size($results->getMemoryUsage(), 4),
                 PHP_EOL, PHP_EOL
-            ), CLI::DEBUG);
+            ), CLI::MESSAGE);
             if ($results->getFailedTests() != 0) {
                 CLI::send(sprintf(
                     "FAIL (failures=%s, success=%s, skipped=%s)",
@@ -171,7 +263,7 @@ class CLI extends unit\Output {
                     "PASS (success=%s, skipped=%s)",
                     $results->getPassedTests(), 
                     $results->getSkippedTests()
-                ));
+                ), CLI::SYSTEM);
             }
             CLI::send(sprintf(
                 "%sAssertions (pass=%s, fail=%s, skip=%s)%s",
@@ -181,7 +273,7 @@ class CLI extends unit\Output {
                 $results->getSkippedAssertions()
                 ,
                 PHP_EOL
-            ));
+            ), CLI::MESSAGE);
         }, "CLI Test Output");
     }
     
@@ -200,7 +292,7 @@ class CLI extends unit\Output {
             default:
             case unit\Output::MESSAGE:
                 if (static::$_colors) {
-                    $message .= "\033[1;32m";
+                    $message .= "\033[1;34m";
                 }
                 $message .= sprintf("%s",
                     $string
@@ -222,7 +314,7 @@ class CLI extends unit\Output {
                 break;
             case unit\Output::DEBUG:
                 if (static::$_colors) {
-                    $message .= "\033[1;35m";
+                    $message .= "\033[1;33m";
                 }
                 $message .= sprintf("%s",
                     $string
@@ -233,7 +325,7 @@ class CLI extends unit\Output {
                 break;
             case unit\Output::SYSTEM:
                 if (static::$_colors) {
-                    $message .= "\033[1;34m";
+                    $message .= "\033[1;36m";
                 }
                 $message .= sprintf("%s",
                     $string

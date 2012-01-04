@@ -29,7 +29,7 @@ class Assertions {
     /**
      * Default assertion namespace
      */
-     const PRGGMRUNIT = 1;
+     const PRGGMRUNIT = 0x00001;
 
     /**
      * Array of avaliable assertion tests.
