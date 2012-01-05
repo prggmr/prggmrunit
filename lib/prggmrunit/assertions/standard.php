@@ -56,8 +56,7 @@ assertion(function($test, $expect, $actual){
 /**
  * Event assertion.
  *
- * Asserts that the getData result associated after the event fire
- * equals what is contained in the resulting event.
+ * Asserts that the expected data is returned from the fired event signal.
  */
 assertion(function($test, $signal, $expected, $params = null, $event = null, $engine = null){
     if (null !== $engine) {
@@ -79,7 +78,7 @@ assertion(function($test, $signal, $expected, $params = null, $event = null, $en
  *
  * Asserts that the giving code throws the giving Exception.
  */
-assertion(function($test, $exception, $code){
+assertion(function($test, $exception, \Closure $code){
     try {
         $code();
     } catch (\Exception $e) {

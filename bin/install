@@ -1,0 +1,113 @@
+#!/usr/bin/php
+<?php
+/**
+ *  Copyright 2010-12 Nickolas Whiting
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *
+ * @author  Nickolas Whiting  <prggmr@gmail.com>
+ * @package  prggmrunit
+ * @copyright  Copyright (c), 2010-12 Nickolas Whiting
+ */
+
+$prggmrunit_v = 'v0.2.3';
+$prggmr_v  = 'v0.2.1';
+
+function send($string, $eol = true) {
+    print($string);
+    if ($eol) print(PHP_EOL);
+}
+
+function in() {
+    return trim(fgets(STDIN));
+}
+
+function out($string) {
+    fwrite(STDOUT, $string);
+}
+
+/**
+ * Simple installation script for prggmrunit.
+ *
+ * Yes it uses goto!!!
+ */
+ send("I must run with root access to install on the include path");
+ send('');
+ send(
+<<<PRGGMR
+                       o 
+                       | 
+o-oo-o--o--o-O-o-o  o--o-
+|  | |  |  | | | |  |  | 
+O-oo o--o--o o o o--o  o 
+|       |  |             
+o    o--o--o                  
+
+prggmurnit $prggmrunit_v
+By Nickolas Whiting
+PRGGMR
+);
+send('');
+$include_path = '/usr/lib/prggmrlabs';
+send(sprintf(
+    "Using $include_path/prggmrunit as the install location"
+));
+question:
+out("Do you want to change this? (y/n) "); // Output - prompt user
+$yn = in(STDIN);
+if ($yn == 'y') {
+    answer:
+    out("Tell me where : ");
+    $nl = in();
+    if (!is_dir($nl)) {
+        if (!@mkdir($nl)) {
+            send("That does not exist and I cannot create!");
+            goto answer;
+        }
+    } 
+    if (!is_writeable($nl)) {
+        send("I cannot write to that location");
+        goto answer;
+    }
+    $include_path = $nl;
+} elseif ($yn != 'n') {
+    send("I accept only y/n as a response");
+    goto question;
+}
+$include_path = rtrim($include_path, '/');
+send("Installing prggmrunit $prggmrunit_v to $include_path/prggmrunit");
+send("Downloading prggmrunit library");
+chdir($include_path);
+exec("git clone http://github.com/nwhitingx/prggmrunit.git prggmrunit");
+chdir('prggmrunit');
+exec("git checkout $prggmrunit_v");
+send("Installing prggmrunit bin");
+exec("ln -s $include_path/prggmrunit/bin/prggmrunit /usr/bin/");
+prggmr:
+out("Do you need to install prggmr? (y/n)");
+$prggmr = in();
+if ($prggmr == 'y') {
+    send("Installing prggmr $prggmr_v");
+    chdir($include_path);
+    exec("git clone http://github.com/nwhitingx/prggmr.git prggmr");
+    chdir('prggmr');
+    exec("git submodules init");
+    exec("git submodules update");
+    exec("git checkout $prggmr_v");
+    send("Installing prggmr bin");
+    exec("ln -s $include_path/prggmr/bin/prggmr /usr/bin");
+    send("prggmr installation done!");
+}
+send("Installation done!");
+send("Have fun writing those unit tests!");
